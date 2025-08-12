@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
-import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room%20/form.dart';
+import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room/form.dart';
 
 class CreateRoom extends StatefulWidget {
   const CreateRoom({super.key});

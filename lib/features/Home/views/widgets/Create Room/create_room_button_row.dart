@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room%20/create_button.dart';
-import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room%20/room_control.dart';
+import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room/create_button.dart';
+import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room/room_control.dart';
 
 class CreateRoomButtonRow extends StatelessWidget {
   final bool isPrivate;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room/Helping%20Widgets/custom_container.dart';
 
-import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room%20/Helping%20Widgets%20/custom_container.dart';
 import 'package:zentry_pomodoro_app/features/Home/views/widgets/Room%20Grid%20Item/Helping%20Widgets/control_badge.dart';
 import 'package:zentry_pomodoro_app/features/Home/views/widgets/Room%20Grid%20Item/Helping%20Widgets/creator_info.dart';
 import 'package:zentry_pomodoro_app/features/Home/views/widgets/Room%20Grid%20Item/Helping%20Widgets/join_button.dart';

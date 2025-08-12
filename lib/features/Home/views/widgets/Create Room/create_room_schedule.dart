@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room%20/scheduler.dart';
+import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room/scheduler.dart';
 
 class CreateRoomSchedule extends StatelessWidget {
   final bool isScheduled;
