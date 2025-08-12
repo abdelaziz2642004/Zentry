@@ -5,8 +5,8 @@ import 'package:zentry_pomodoro_app/features/Authentication/data/services/sign_u
 import 'dart:io';
 
 class AuthRepo {
-  late LoginService loginService;
-  late SignupService signupService;
+  final LoginService loginService = LoginService();
+  final SignupService signupService = SignupService();
 
   Future<void> signUp({
     required String email,

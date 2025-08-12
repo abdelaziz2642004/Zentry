@@ -32,13 +32,13 @@ class _SignupFormState extends State<SignupForm> {
   String? _emailError;
   String? _usernameError;
 
-  final SignupService _signupService = SignupService();
+  // final SignupService _signupService = SignupService();
 
-  @override
-  void initState() {
-    super.initState();
-    BlocProvider.of<AuthCubit>(context).authRepo.signupService = _signupService;
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   BlocProvider.of<AuthCubit>(context).authRepo.signupService = _signupService;
+  // }
 
   @override
   void dispose() {
@@ -56,7 +56,7 @@ class _SignupFormState extends State<SignupForm> {
       return;
     }
 
-    final isAvailable = await _signupService.isEmailAvailable(email);
+    final isAvailable = await SignupService.isEmailAvailable(email);
     setState(() {
       _emailError = isAvailable ? null : 'Email already exists';
     });
@@ -68,7 +68,7 @@ class _SignupFormState extends State<SignupForm> {
       return;
     }
 
-    final isAvailable = await _signupService.isUsernameAvailable(username);
+    final isAvailable = await SignupService.isUsernameAvailable(username);
     setState(() {
       _usernameError = isAvailable ? null : 'Username already exists';
     });

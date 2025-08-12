@@ -63,7 +63,7 @@ class SignupService {
   }
 
   /// Check if username is available
-  Future<bool> isUsernameAvailable(String username) async {
+  static Future<bool> isUsernameAvailable(String username) async {
     final snapshot =
         await FirebaseFirestore.instance
             .collection(FirebaseConstants.userNamesCollection)
@@ -73,7 +73,7 @@ class SignupService {
   }
 
   /// Check if email is available
-  Future<bool> isEmailAvailable(String email) async {
+  static Future<bool> isEmailAvailable(String email) async {
     final snapshot =
         await FirebaseFirestore.instance
             .collection(FirebaseConstants.usersCollection)

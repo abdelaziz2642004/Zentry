@@ -21,13 +21,13 @@ class _LoginFormState extends State<LoginForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  final LoginService _loginService = LoginService();
+  // final LoginService _loginService = LoginService();
 
-  @override
-  void initState() {
-    super.initState();
-    BlocProvider.of<AuthCubit>(context).authRepo.loginService = _loginService;
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   BlocProvider.of<AuthCubit>(context).authRepo.loginService = _loginService;
+  // }
 
   @override
   void dispose() {
