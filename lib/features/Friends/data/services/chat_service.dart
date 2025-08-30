@@ -307,15 +307,16 @@ class ChatService {
       for (final entry in reactions.entries) {
         if (entry.key == emoji) {
           if (entry.value.contains(userId)) {
-            // Remove reaction
+            // Remove reaction from this emoji
             final newList = List<String>.from(entry.value)..remove(userId);
             if (newList.isNotEmpty) {
               newReactions[emoji] = newList;
             }
             userHasReacted = true;
           } else {
-            // Add reaction (but first remove from others)
-            newReactions[emoji] = [userId];
+            // Add reaction to this emoji (keep existing users)
+            final newList = List<String>.from(entry.value)..add(userId);
+            newReactions[emoji] = newList;
             userHasReacted = true;
           }
         } else {

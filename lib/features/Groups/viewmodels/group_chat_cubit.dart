@@ -183,7 +183,7 @@ class GroupChatCubit extends Cubit<GroupChatState> {
       for (final entry in currentReactions.entries) {
         if (entry.key == emoji) {
           if (entry.value.contains(currentUserId)) {
-            // Remove reaction
+            // Remove reaction from this emoji
             final newList = List<String>.from(entry.value)
               ..remove(currentUserId);
             if (newList.isNotEmpty) {
@@ -191,8 +191,9 @@ class GroupChatCubit extends Cubit<GroupChatState> {
             }
             userHasReacted = true;
           } else {
-            // Add reaction (but first remove from others)
-            newReactions[emoji] = [currentUserId];
+            // Add reaction to this emoji (keep existing users)
+            final newList = List<String>.from(entry.value)..add(currentUserId);
+            newReactions[emoji] = newList;
             userHasReacted = true;
           }
         } else {

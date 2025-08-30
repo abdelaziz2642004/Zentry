@@ -372,6 +372,15 @@ abstract class BaseMessageBubble<T> extends StatelessWidget {
             _showReactionPicker(context);
           },
         ),
+      if (reactions != null && reactions!.isNotEmpty)
+        ListTile(
+          leading: const Icon(Icons.people_outline, color: Colors.green),
+          title: const Text('View reactions'),
+          onTap: () {
+            Navigator.of(context).pop();
+            _showReactionDetails(context);
+          },
+        ),
       if (onViewProfile != null)
         ListTile(
           leading: const Icon(Icons.person_outline, color: Colors.purple),
@@ -409,6 +418,82 @@ abstract class BaseMessageBubble<T> extends StatelessWidget {
         duration: Duration(seconds: 2),
         backgroundColor: Colors.green,
       ),
+    );
+  }
+
+  void _showReactionDetails(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Reactions'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children:
+                    reactions!.entries.map((entry) {
+                      final emoji = entry.key;
+                      final userIds = entry.value;
+                      return _buildReactionSection(emoji, userIds);
+                    }).toList(),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Widget _buildReactionSection(String emoji, List<String> userIds) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
+              Text(
+                '${userIds.length} ${userIds.length == 1 ? 'person' : 'people'}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ...userIds.map((userId) => _buildUserNameStream(userId)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserNameStream(String userId) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream:
+          FirebaseFirestore.instance
+              .collection('Users')
+              .doc(userId)
+              .snapshots(),
+      builder: (context, snapshot) {
+        String userName = 'Unknown User';
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          userName = data?['name'] ?? 'Unknown User';
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(left: 28, top: 2),
+          child: Text(userName, style: const TextStyle(fontSize: 14)),
+        );
+      },
     );
   }
 
