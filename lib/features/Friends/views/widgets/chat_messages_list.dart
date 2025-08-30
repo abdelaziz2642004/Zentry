@@ -7,6 +7,10 @@ import 'package:zentry_pomodoro_app/features/Friends/views/widgets/message_bubbl
 import 'package:zentry_pomodoro_app/features/Friends/views/widgets/room_invitation_bubble.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/models/chat_message.dart';
 import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
+import 'package:zentry_pomodoro_app/features/Room%20Operations/views/screens/room_screen.dart';
+import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/Room_Cubit.dart';
+import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/Room_States.dart';
+import 'package:zentry_pomodoro_app/core/SnackBars/FailedSnackBar.dart';
 
 class ChatMessagesList extends StatefulWidget {
   final String otherUserId;
@@ -165,14 +169,59 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
     });
   }
 
-  void _handleJoinRoom(dynamic message) {
-    // This will be handled by the parent widget
-    // For now, we'll just show a snackbar
+  void _handleJoinRoom(ChatMessage message) async {
+    // Get the room code from the invitation message
+    final roomCode = message.roomCode;
+    if (roomCode == null || roomCode.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(failedSnackBar(msg: 'Invalid room invitation'));
+      return;
+    }
+
+    // Check if already joining a room
+    final roomCubit = BlocProvider.of<RoomCubit>(context);
+    final currentState = roomCubit.state;
+    if (currentState.runtimeType.toString() == 'RoomJoinLoadingState') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        failedSnackBar(msg: 'Already joining a room. Please wait.'),
+      );
+      return;
+    }
+
+    // Show loading indicator
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Join room functionality will be implemented'),
-        backgroundColor: Colors.blue,
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Joining room...'),
+          ],
+        ),
+        duration: Duration(seconds: 2),
       ),
     );
+
+    try {
+      // Navigate to room screen - let the RoomScreen handle joining
+      if (context.mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder:
+                (_) => BlocProvider.value(
+                  value: roomCubit,
+                  child: RoomScreen(roomCode: roomCode),
+                ),
+          ),
+        );
+      }
+    } on Exception catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(failedSnackBar(msg: 'Failed to join room'));
+      }
+    }
   }
 }
