@@ -11,6 +11,11 @@ class ChatMessage {
   final String? senderName;
   final Map<String, dynamic>? reactions;
 
+  // For replies
+  final String? replyToMessageId;
+  final String? replyToMessageContent;
+  final String? replyToSenderName;
+
   ChatMessage({
     required this.id,
     required this.senderId,
@@ -19,6 +24,9 @@ class ChatMessage {
     this.type = MessageType.text,
     this.senderName,
     this.reactions,
+    this.replyToMessageId,
+    this.replyToMessageContent,
+    this.replyToSenderName,
   });
 
   factory ChatMessage.fromFirestore(DocumentSnapshot doc) {
@@ -34,6 +42,9 @@ class ChatMessage {
       ),
       senderName: data['senderName'],
       reactions: data['reactions'],
+      replyToMessageId: data['replyToMessageId'],
+      replyToMessageContent: data['replyToMessageContent'],
+      replyToSenderName: data['replyToSenderName'],
     );
   }
 
@@ -45,6 +56,9 @@ class ChatMessage {
       'type': type.toString().split('.').last,
       'senderName': senderName,
       'reactions': reactions,
+      'replyToMessageId': replyToMessageId,
+      'replyToMessageContent': replyToMessageContent,
+      'replyToSenderName': replyToSenderName,
     };
   }
 
@@ -56,6 +70,9 @@ class ChatMessage {
     MessageType? type,
     String? senderName,
     Map<String, dynamic>? reactions,
+    String? replyToMessageId,
+    String? replyToMessageContent,
+    String? replyToSenderName,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -65,6 +82,10 @@ class ChatMessage {
       type: type ?? this.type,
       senderName: senderName ?? this.senderName,
       reactions: reactions ?? this.reactions,
+      replyToMessageId: replyToMessageId ?? this.replyToMessageId,
+      replyToMessageContent:
+          replyToMessageContent ?? this.replyToMessageContent,
+      replyToSenderName: replyToSenderName ?? this.replyToSenderName,
     );
   }
 

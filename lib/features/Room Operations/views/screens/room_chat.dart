@@ -24,6 +24,7 @@ class RoomChat extends StatefulWidget {
 
 class _RoomChatState extends State<RoomChat> {
   final ScrollController _scrollController = ScrollController();
+  dynamic _replyingTo;
 
   @override
   void initState() {
@@ -158,16 +159,9 @@ class _RoomChatState extends State<RoomChat> {
                           );
                         },
                         onReply: (replyToMessage) {
-                          // Handle reply - this would need to be implemented
-                          // For now, we'll just show a snackbar
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Replying to: ${replyToMessage.message}',
-                              ),
-                              backgroundColor: Colors.blue,
-                            ),
-                          );
+                          setState(() {
+                            _replyingTo = replyToMessage;
+                          });
                         },
                         onViewProfile: (userId) {
                           showDialog(
@@ -188,11 +182,28 @@ class _RoomChatState extends State<RoomChat> {
 
           // Chat Input
           ChatInputField(
+            replyingTo: _replyingTo,
+            onReplyCleared: () {
+              setState(() {
+                _replyingTo = null;
+              });
+            },
             onSendMessage: (message) {
-              context.read<RoomChatCubit>().sendMessage(
-                message,
-                widget.currentUser,
-              );
+              if (_replyingTo != null) {
+                // Send reply message
+                context.read<RoomChatCubit>().sendReplyMessage(
+                  message: message,
+                  replyToMessageId: _replyingTo.id,
+                  replyToMessageContent: _replyingTo.message,
+                  replyToSenderName: _replyingTo.senderName ?? 'Unknown',
+                );
+              } else {
+                // Send normal message
+                context.read<RoomChatCubit>().sendMessage(
+                  message,
+                  widget.currentUser,
+                );
+              }
             },
           ),
         ],

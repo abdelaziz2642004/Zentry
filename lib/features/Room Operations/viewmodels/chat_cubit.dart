@@ -61,6 +61,39 @@ class RoomChatCubit extends Cubit<ChatStates> {
     }
   }
 
+  // Send a reply message
+  Future<void> sendReplyMessage({
+    required String message,
+    required String replyToMessageId,
+    required String replyToMessageContent,
+    required String replyToSenderName,
+  }) async {
+    if (message.trim().isEmpty || _currentRoomCode == null) return;
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final chatMessage = ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      senderId: currentUser.uid,
+      message: message.trim(),
+      timestamp: Timestamp.now(),
+      type: MessageType.text,
+      senderName: currentUser.displayName ?? 'Unknown User',
+      replyToMessageId: replyToMessageId,
+      replyToMessageContent: replyToMessageContent,
+      replyToSenderName: replyToSenderName,
+    );
+
+    try {
+      await chatRepository.sendMessage(_currentRoomCode!, chatMessage);
+      // Message will be added to the stream automatically
+    } on Exception catch (e) {
+      e;
+      emit(ChatErrorState('Error sending reply: $e'));
+    }
+  }
+
   // Send system message (user joined/left)
   Future<void> sendSystemMessage(String message) async {
     if (_currentRoomCode == null) return;

@@ -47,7 +47,7 @@ class ChatMessageItem extends StatelessWidget {
     } else {
       return MessageBubble(
         message: message,
-        isMe: isMe,
+        isMyMessage: isMe,
         isBlocked: isBlocked,
         isBlockedByUser: isBlockedByUser,
         isFriend: isFriend,

@@ -53,28 +53,6 @@ class AtStartService {
           seconds: userData[FirebaseConstants.totalStudyTimeField] ?? 0,
         ),
       );
-
-      // Set user as online
-      await _onlineStatusService.setUserOnline();
-
-      final user = FireUser(
-        notifications: [],
-        id: fireUserId,
-        email: userData[FirebaseConstants.emailField] ?? '',
-        imageUrl: userData[FirebaseConstants.imageUrlField] ?? '',
-        fullName: userData[FirebaseConstants.fullNameField] ?? '',
-        timezone: userData[FirebaseConstants.timezoneField] ?? 'UTC',
-        timezoneOffset: userData[FirebaseConstants.timezoneOffsetField] ?? 0,
-        dailyStudyHours: Duration(
-          seconds: userData[FirebaseConstants.dailyStudyHoursField] ?? 0,
-        ),
-        lastStudyDate: userData[FirebaseConstants.lastStudyDateField] ?? '',
-        totalStudyTime: Duration(
-          seconds: userData[FirebaseConstants.totalStudyTimeField] ?? 0,
-        ),
-      );
-
-      return user;
     } catch (e) {
       throw Exception("Error fetching FireUser: $e");
     }
