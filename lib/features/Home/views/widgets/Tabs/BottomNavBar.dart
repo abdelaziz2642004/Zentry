@@ -18,9 +18,9 @@ class Bottomnavbar extends StatelessWidget {
       type: BottomNavigationBarType.fixed,
       items: [
         _buildNavItem(Icons.home, 0),
-        _buildNavItem(Icons.favorite_border, 1),
-        // _buildNavItem(Icons.shopping_bag_outlined, 2),
-        // _buildNavItem(Icons.notifications_none, 3),
+        _buildNavItem(Icons.people, 1),
+        _buildNavItem(Icons.groups, 2),
+        _buildNavItem(Icons.chat, 3),
       ],
     );
   }

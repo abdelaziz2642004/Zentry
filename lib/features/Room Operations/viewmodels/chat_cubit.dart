@@ -6,8 +6,8 @@ import 'package:zentry_pomodoro_app/features/Authentication/data/models/user.dar
 import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/chat_states.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/data/repositories/chat_repository.dart';
 
-class ChatCubit extends Cubit<ChatStates> {
-  ChatCubit(this.chatRepository) : super(ChatInitialState());
+class RoomChatCubit extends Cubit<ChatStates> {
+  RoomChatCubit(this.chatRepository) : super(ChatInitialState());
 
   final ChatRepository chatRepository;
   StreamSubscription<List<ChatMessage>>? _chatSubscription;

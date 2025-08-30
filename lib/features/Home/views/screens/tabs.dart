@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:zentry_pomodoro_app/features/Home/views/screens/home_screen.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Home/views/widgets/Tabs/BottomNavBar.dart';
-import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/Room_Cubit.dart';
-import 'package:zentry_pomodoro_app/core/get_it.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/screens/friends_screen.dart';
+import 'package:zentry_pomodoro_app/features/Groups/views/screens/groups_screen.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/screens/chat_list_screen.dart';
 
 class TabsScreen extends StatefulWidget {
   const TabsScreen({super.key});
@@ -26,10 +26,13 @@ class _TabsState extends State<TabsScreen> {
   Widget _buildScreenChooser(int index, void Function(int) rebuild) {
     switch (index) {
       case 0:
-        return BlocProvider<RoomCubit>(
-          create: (_) => getIt<RoomCubit>(),
-          child: const Homescreen(),
-        );
+        return const Homescreen();
+      case 1:
+        return const FriendsScreen();
+      case 2:
+        return const GroupsScreen();
+      case 3:
+        return const ChatListScreen();
       default:
         return const Homescreen();
     }

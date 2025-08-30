@@ -3,11 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:zentry_pomodoro_app/features/Profile/viewmodels/account_states.dart';
 import 'package:zentry_pomodoro_app/features/Profile/data/repositories/AccountOPS_Repo.dart';
+import 'package:zentry_pomodoro_app/features/Friends/data/services/online_status_service.dart';
 
 class AccountCubit extends Cubit<AccountStates> {
   AccountCubit(this.accountopsRepo) : super(AccountInitialState());
 
   AccountopsRepo accountopsRepo;
+  final OnlineStatusService _onlineStatusService = OnlineStatusService();
 
   Future<void> changePassword(String oldPassword, String newPassword) async {
     emit(AccountLoadingState());
@@ -38,6 +40,9 @@ class AccountCubit extends Cubit<AccountStates> {
     try {
       emit(AccountLoadingState());
 
+      // Set user as offline before deleting account
+      await _onlineStatusService.setUserOffline();
+
       await accountopsRepo.deleteAccount();
 
       emit(UserDeletionSuccess());
@@ -50,6 +55,9 @@ class AccountCubit extends Cubit<AccountStates> {
   Future<void> logout() async {
     try {
       emit(AccountLoadingState());
+
+      // Set user as offline before signing out
+      await _onlineStatusService.setUserOffline();
 
       await FirebaseAuth.instance.signOut();
 

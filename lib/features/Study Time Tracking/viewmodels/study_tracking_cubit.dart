@@ -32,15 +32,15 @@ class StudyTrackingCubit extends Cubit<StudyTrackingStates> {
   }
 
   /// Get study time for a specific date
-  Future<Duration> getStudyTimeForDate(String date) async {
-    try {
-      return await _studyService.getStudyTimeForDate(date);
-    } on Exception catch (e) {
-      e;
-      emit(StudyTrackingErrorState('Failed to get study time for date: $e'));
-      return Duration.zero;
-    }
-  }
+  // Future<Duration> getStudyTimeForDate(String date) async {
+  //   try {
+  //     return await _studyService.getStudyTimeForDate(date);
+  //   } on Exception catch (e) {
+  //     e;
+  //     emit(StudyTrackingErrorState('Failed to get study time for date: $e'));
+  //     return Duration.zero;
+  //   }
+  // }
 
   /// Get study time for the last N days
   Future<Map<String, Duration>> getStudyTimeForLastDays(int days) async {

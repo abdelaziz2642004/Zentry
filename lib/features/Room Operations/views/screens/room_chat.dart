@@ -28,7 +28,7 @@ class _RoomChatState extends State<RoomChat> {
   void initState() {
     super.initState();
     // Start listening to chat messages
-    context.read<ChatCubit>().startListeningToChat(widget.roomCode);
+    context.read<RoomChatCubit>().startListeningToChat(widget.roomCode);
   }
 
   @override
@@ -62,7 +62,7 @@ class _RoomChatState extends State<RoomChat> {
 
           // Messages List
           Expanded(
-            child: BlocConsumer<ChatCubit, ChatStates>(
+            child: BlocConsumer<RoomChatCubit, ChatStates>(
               listener: (context, state) {
                 if (state is ChatMessagesLoaded) {
                   // Auto-scroll to bottom when new messages arrive
@@ -146,7 +146,9 @@ class _RoomChatState extends State<RoomChat> {
                         message: message,
                         isMyMessage: isMyMessage,
                         onDelete: () {
-                          context.read<ChatCubit>().deleteMessage(message.id);
+                          context.read<RoomChatCubit>().deleteMessage(
+                            message.id,
+                          );
                         },
                       );
                     },
@@ -161,7 +163,7 @@ class _RoomChatState extends State<RoomChat> {
           // Chat Input
           ChatInputField(
             onSendMessage: (message) {
-              context.read<ChatCubit>().sendMessage(
+              context.read<RoomChatCubit>().sendMessage(
                 message,
                 widget.currentUser,
               );

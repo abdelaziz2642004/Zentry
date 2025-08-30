@@ -26,7 +26,7 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
   void initState() {
     super.initState();
     // Start listening to chat messages
-    context.read<ChatCubit>().startListeningToChat(widget.roomCode);
+    context.read<RoomChatCubit>().startListeningToChat(widget.roomCode);
   }
 
   void _scrollToBottom() {
@@ -41,7 +41,7 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<ChatCubit, ChatStates>(
+    return BlocConsumer<RoomChatCubit, ChatStates>(
       listener: (context, state) {
         if (state is ChatMessagesLoaded) {
           // Auto-scroll to bottom when new messages arrive
@@ -123,7 +123,7 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
           message: message,
           isMyMessage: isMyMessage,
           onDelete: () {
-            context.read<ChatCubit>().deleteMessage(message.id);
+            context.read<RoomChatCubit>().deleteMessage(message.id);
           },
         );
       },
