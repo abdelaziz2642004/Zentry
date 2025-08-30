@@ -6,7 +6,7 @@ import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/chat_s
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/chat/chat_header.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/chat/chat_input_field.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/chat/chat_message_bubble.dart';
-import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile_popup_dialog.dart';
 
 class RoomChat extends StatefulWidget {
   final String roomCode;
@@ -170,12 +170,10 @@ class _RoomChatState extends State<RoomChat> {
                           );
                         },
                         onViewProfile: (userId) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (context) =>
-                                      ViewProfileScreen(userId: userId),
-                            ),
+                          showDialog(
+                            context: context,
+                            builder:
+                                (context) => ProfilePopupDialog(userId: userId),
                           );
                         },
                       );

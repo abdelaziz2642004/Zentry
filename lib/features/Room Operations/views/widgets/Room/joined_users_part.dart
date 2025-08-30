@@ -5,7 +5,7 @@ import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/Room_C
 import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/Room_States.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 import 'package:async/async.dart';
-import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile_popup_dialog.dart';
 
 class Joineduserspart extends StatelessWidget {
   const Joineduserspart({super.key, required this.roomCode});
@@ -128,135 +128,7 @@ class Joineduserspart extends StatelessWidget {
   ) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Profile Picture
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage:
-                      userImage.isNotEmpty ? NetworkImage(userImage) : null,
-                  child:
-                      userImage.isEmpty
-                          ? const Icon(
-                            Icons.person,
-                            size: 50,
-                            color: Colors.grey,
-                          )
-                          : null,
-                ),
-                const SizedBox(height: 16),
-
-                // User Name
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-
-                // Friend Code (if available)
-                StreamBuilder<DocumentSnapshot>(
-                  stream:
-                      FirebaseFirestore.instance
-                          .collection(FirebaseConstants.usersCollection)
-                          .doc(userId)
-                          .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData && snapshot.data!.exists) {
-                      final userData =
-                          snapshot.data!.data() as Map<String, dynamic>?;
-                      final friendCode = userData?['friendCode'] as String?;
-
-                      if (friendCode != null && friendCode.isNotEmpty) {
-                        return Column(
-                          children: [
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey[300]!),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.person_pin,
-                                    size: 16,
-                                    color: Colors.grey,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Friend Code: $friendCode',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      fontFamily: 'monospace',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // Weekly Study Time
-                const Text(
-                  'This Week\'s Study Time',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildWeeklyStudyTime(userId),
-
-                const SizedBox(height: 16),
-
-                // Close Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Close'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      builder: (BuildContext context) => ProfilePopupDialog(userId: userId),
     );
   }
 

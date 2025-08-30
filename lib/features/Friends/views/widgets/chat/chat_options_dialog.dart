@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/block_service.dart';
-import 'package:zentry_pomodoro_app/core/colors.dart';
 
 class ChatOptionsDialog extends StatelessWidget {
   final String otherUserId;
@@ -17,7 +16,7 @@ class ChatOptionsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Chat Options'),
+      title: const Text('Chat Options'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

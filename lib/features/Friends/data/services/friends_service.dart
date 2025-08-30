@@ -6,7 +6,6 @@ import 'package:zentry_pomodoro_app/features/Friends/data/models/friend.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/models/friend_request.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/block_service.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/friend_code_service.dart';
-import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 
 class FriendsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -826,5 +825,94 @@ class FriendsService {
       print('Error checking if any friend request is pending: $e');
       return false;
     }
+  }
+
+  /// Get real-time friendship status between two users
+  Stream<Map<String, bool>> getFriendshipStatusStream(
+    String userId1,
+    String userId2,
+  ) {
+    // Listen to both friendship status and friend requests in real-time
+    return _firestore
+        .collection('friendRequests')
+        .where('senderId', whereIn: [userId1, userId2])
+        .where('receiverId', whereIn: [userId1, userId2])
+        .snapshots()
+        .asyncMap((requestsSnapshot) async {
+          // Check friendship status
+          final friendshipDoc =
+              await _firestore
+                  .collection('friends')
+                  .doc(userId1)
+                  .collection('friendsList')
+                  .doc(userId2)
+                  .get();
+
+          final isFriend = friendshipDoc.exists;
+
+          // Check for pending friend requests
+          final pendingRequests =
+              requestsSnapshot.docs
+                  .where((doc) => doc.data()['status'] == 'pending')
+                  .toList();
+
+          final hasPendingRequest = pendingRequests.isNotEmpty;
+
+          return {'isFriend': isFriend, 'hasPendingRequest': hasPendingRequest};
+        });
+  }
+
+  /// Get detailed real-time friendship status between two users
+  Stream<Map<String, dynamic>> getDetailedFriendshipStatusStream(
+    String userId1,
+    String userId2,
+  ) {
+    return _firestore
+        .collection('friendRequests')
+        .where('senderId', whereIn: [userId1, userId2])
+        .where('receiverId', whereIn: [userId1, userId2])
+        .snapshots()
+        .asyncMap((requestsSnapshot) async {
+          // Check friendship status
+          final friendshipDoc =
+              await _firestore
+                  .collection('friends')
+                  .doc(userId1)
+                  .collection('friendsList')
+                  .doc(userId2)
+                  .get();
+
+          final isFriend = friendshipDoc.exists;
+
+          // Check for pending friend requests and their direction
+          final pendingRequests =
+              requestsSnapshot.docs
+                  .where((doc) => doc.data()['status'] == 'pending')
+                  .toList();
+
+          final hasPendingRequest = pendingRequests.isNotEmpty;
+          bool isRequestSent = false;
+          bool isRequestReceived = false;
+
+          if (hasPendingRequest) {
+            for (final request in pendingRequests) {
+              final data = request.data();
+              if (data['senderId'] == userId1 &&
+                  data['receiverId'] == userId2) {
+                isRequestSent = true;
+              } else if (data['senderId'] == userId2 &&
+                  data['receiverId'] == userId1) {
+                isRequestReceived = true;
+              }
+            }
+          }
+
+          return {
+            'isFriend': isFriend,
+            'hasPendingRequest': hasPendingRequest,
+            'isRequestSent': isRequestSent,
+            'isRequestReceived': isRequestReceived,
+          };
+        });
   }
 }

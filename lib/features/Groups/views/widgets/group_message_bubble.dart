@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:zentry_pomodoro_app/features/Groups/data/models/group_message.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
-import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile_popup_dialog.dart';
 import 'package:intl/intl.dart';
 
 class GroupMessageBubble extends StatelessWidget {

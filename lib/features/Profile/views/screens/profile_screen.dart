@@ -9,7 +9,7 @@ import 'package:zentry_pomodoro_app/features/Profile/data/repositories/AccountOP
 import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile/profile_info.dart';
 import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile/profile_options.dart';
 import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile/profile_pic.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friend_code_display.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friend_code/friend_code_display.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_states.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/user_service.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/conversation_tile.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/empty_conversations_widget.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat/conversation_tile.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/empty_states/empty_conversations_widget.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});

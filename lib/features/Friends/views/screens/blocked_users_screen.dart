@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/blocked_users_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_states.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/blocked_user_card.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/empty_blocked_users_widget.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/blocked_users/blocked_user_card.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/blocked_users/empty_blocked_users_widget.dart';
 
 class BlockedUsersScreen extends StatefulWidget {
   const BlockedUsersScreen({super.key});

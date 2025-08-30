@@ -6,7 +6,7 @@ import 'package:zentry_pomodoro_app/features/Groups/data/models/group_message.da
 import 'package:zentry_pomodoro_app/features/Groups/viewmodels/group_chat_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Groups/views/widgets/group_message_bubble.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
-import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile_popup_dialog.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final StudyGroup group;
@@ -234,12 +234,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                             });
                           },
                           onViewProfile: (userId) {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                        ViewProfileScreen(userId: userId),
-                              ),
+                            showDialog(
+                              context: context,
+                              builder:
+                                  (context) =>
+                                      ProfilePopupDialog(userId: userId),
                             );
                           },
                         );

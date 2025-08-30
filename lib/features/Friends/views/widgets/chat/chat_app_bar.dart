@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
-import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile_popup_dialog.dart';
 
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String otherUserId;
@@ -22,10 +22,9 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         children: [
           GestureDetector(
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ViewProfileScreen(userId: otherUserId),
-                ),
+              showDialog(
+                context: context,
+                builder: (context) => ProfilePopupDialog(userId: otherUserId),
               );
             },
             child: StreamBuilder<DocumentSnapshot>(

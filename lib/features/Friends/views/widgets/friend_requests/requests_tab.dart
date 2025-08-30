@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friend_requests_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_states.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friend_request_card.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/empty_requests_widget.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friend_requests/friend_request_card.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/empty_states/empty_requests_widget.dart';
 
 class RequestsTab extends StatelessWidget {
   const RequestsTab({super.key});

@@ -5,10 +5,10 @@ import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_cubit.dart'
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_states.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/block_service.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/friends_service.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat_app_bar.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat_messages_list.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat_input.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat_options_dialog.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat/chat_app_bar.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat/chat_messages_list.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat/chat_input.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat/chat_options_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/models/chat_message.dart';
 
@@ -41,6 +41,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _disposed = false;
   StreamSubscription<bool>? _blockStatusSubscription;
   StreamSubscription<bool>? _blockedByUserSubscription;
+  StreamSubscription<Map<String, dynamic>>? _friendshipStatusSubscription;
   ChatMessage? _replyingTo;
 
   @override
@@ -50,7 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _chatCubit.loadChatMessages(widget.otherUserId);
     _chatCubit.markMessagesAsRead(widget.otherUserId);
     _setupBlockStatusStreams();
-    _checkFriendshipStatus();
+    _setupFriendshipStatusStream();
   }
 
   @override
@@ -58,6 +59,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _disposed = true;
     _blockStatusSubscription?.cancel();
     _blockedByUserSubscription?.cancel();
+    _friendshipStatusSubscription?.cancel();
     _scrollController.dispose();
     _chatCubit.stopStreams();
     super.dispose();
@@ -130,8 +132,6 @@ class _ChatScreenState extends State<ChatScreen> {
             setState(() {
               _isBlocked = isBlocked;
             });
-            // Refresh friendship status when block status changes
-            _checkFriendshipStatus();
           }
         });
 
@@ -142,69 +142,33 @@ class _ChatScreenState extends State<ChatScreen> {
             setState(() {
               _isBlockedByUser = isBlockedByUser;
             });
-            // Refresh friendship status when block status changes
-            _checkFriendshipStatus();
           }
         });
   }
 
-  Future<void> _checkBlockStatus() async {
-    try {
-      final isBlocked = await _blockService.isUserBlocked(widget.otherUserId);
-      final isBlockedByUser = await _blockService.isBlockedByUser(
-        widget.otherUserId,
-      );
+  void _setupFriendshipStatusStream() {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (currentUserId.isEmpty) return;
 
-      if (mounted) {
-        setState(() {
-          _isBlocked = isBlocked;
-          _isBlockedByUser = isBlockedByUser;
+    // Listen to real-time detailed friendship status changes
+    _friendshipStatusSubscription = _friendsService
+        .getDetailedFriendshipStatusStream(currentUserId, widget.otherUserId)
+        .listen((status) {
+          if (!_disposed && mounted) {
+            setState(() {
+              _isFriend = status['isFriend'] ?? false;
+              _isAnyRequestPending = status['hasPendingRequest'] ?? false;
+              _isFriendRequestPending = status['isRequestSent'] ?? false;
+              _isFriendRequestReceived = status['isRequestReceived'] ?? false;
+              _isLoadingFriendship = false;
+            });
+          }
         });
-      }
-    } catch (e) {
-      print('Error checking block status: $e');
-    }
-  }
-
-  Future<void> _checkFriendshipStatus() async {
-    try {
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
-      final isFriend = await _friendsService.checkIfFriends(
-        currentUserId,
-        widget.otherUserId,
-      );
-      final isPending = await _friendsService.checkIfFriendRequestSent(
-        currentUserId,
-        widget.otherUserId,
-      );
-      final isReceived = await _friendsService.checkIfFriendRequestReceived(
-        currentUserId,
-        widget.otherUserId,
-      );
-      final isAnyRequestPending = await _friendsService
-          .checkIfAnyFriendRequestPending(currentUserId, widget.otherUserId);
-
-      if (mounted) {
-        setState(() {
-          _isFriend = isFriend;
-          _isFriendRequestPending = isPending;
-          _isFriendRequestReceived = isReceived;
-          _isAnyRequestPending = isAnyRequestPending;
-          _isLoadingFriendship = false;
-        });
-      }
-    } catch (e) {
-      print('Error checking friendship status: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingFriendship = false;
-        });
-      }
-    }
   }
 
   Future<void> _refreshFriendshipStatus() async {
-    await _checkFriendshipStatus();
+    // The real-time stream will automatically update the status
+    // No need to manually refresh since we're using real-time streams
   }
 
   void _showChatOptions() {

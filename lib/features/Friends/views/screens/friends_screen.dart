@@ -5,10 +5,10 @@ import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_cubit.da
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_list_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friend_requests_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_states.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friends_app_bar.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friends_tab.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/requests_tab.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/add_friend_dialog.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friends_list/friends_app_bar.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friends_list/friends_tab.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friend_requests/requests_tab.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/add_friend/add_friend_dialog.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
 
 class FriendsScreen extends StatefulWidget {

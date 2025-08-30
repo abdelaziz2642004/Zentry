@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
@@ -215,12 +216,13 @@ class ViewProfileScreen extends StatelessWidget {
                             if (friendCode.isNotEmpty) ...[
                               IconButton(
                                 onPressed: () {
-                                  // Copy friend code to clipboard
-                                  // This would need to be implemented with clipboard package
+                                  Clipboard.setData(
+                                    ClipboardData(text: friendCode),
+                                  );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
-                                        'Friend code copied to clipboard',
+                                        'Friend code copied to clipboard!',
                                       ),
                                       backgroundColor: Colors.green,
                                     ),

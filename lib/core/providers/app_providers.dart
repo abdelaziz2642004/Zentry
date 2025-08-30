@@ -13,6 +13,7 @@ import 'package:zentry_pomodoro_app/features/Groups/viewmodels/discovery_groups_
 import 'package:zentry_pomodoro_app/features/Groups/viewmodels/my_groups_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Groups/viewmodels/group_chat_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_cubit.dart';
+import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_input_cubit.dart';
 import 'package:zentry_pomodoro_app/core/get_it.dart';
 
 /// Centralizes all app-level state management with Bloc pattern
@@ -45,6 +46,9 @@ class AppProviders extends StatelessWidget {
         BlocProvider<MyGroupsCubit>(create: (_) => MyGroupsCubit()),
         BlocProvider<GroupChatCubit>(create: (_) => GroupChatCubit()),
         BlocProvider<ChatCubit>(create: (_) => ChatCubit()),
+        BlocProvider<ChatInputCubit>(
+          create: (context) => ChatInputCubit(context.read<ChatCubit>()),
+        ),
       ],
       child: child,
     );

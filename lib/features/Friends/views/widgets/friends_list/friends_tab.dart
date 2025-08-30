@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_list_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_states.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friend_card.dart';
-import 'package:zentry_pomodoro_app/features/Friends/views/widgets/empty_friends_widget.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friends_list/friend_card.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/empty_states/empty_friends_widget.dart';
 
 class FriendsTab extends StatelessWidget {
   const FriendsTab({super.key});
