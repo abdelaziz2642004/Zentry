@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/friends_service.dart';
+import 'package:zentry_pomodoro_app/features/Friends/data/models/chat_message.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
 
 class ChatInput extends StatefulWidget {
@@ -15,6 +16,8 @@ class ChatInput extends StatefulWidget {
   final bool isFriendRequestReceived;
   final bool isAnyRequestPending;
   final VoidCallback? onRefreshFriendshipStatus;
+  final ChatMessage? replyingTo;
+  final VoidCallback? onClearReply;
 
   const ChatInput({
     super.key,
@@ -27,6 +30,8 @@ class ChatInput extends StatefulWidget {
     required this.isFriendRequestReceived,
     required this.isAnyRequestPending,
     this.onRefreshFriendshipStatus,
+    this.replyingTo,
+    this.onClearReply,
   });
 
   @override
@@ -35,6 +40,7 @@ class ChatInput extends StatefulWidget {
 
 class _ChatInputState extends State<ChatInput> {
   final TextEditingController _messageController = TextEditingController();
+  final FriendsService _friendsService = FriendsService();
 
   @override
   void dispose() {
@@ -97,8 +103,16 @@ class _ChatInputState extends State<ChatInput> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Friend request pending - waiting for response',
-              style: TextStyle(color: Colors.orange[700], fontSize: 14),
+              widget.isFriendRequestPending
+                  ? 'Friend request sent - waiting for response'
+                  : 'You need to be friends to send messages',
+              style: TextStyle(
+                color:
+                    widget.isFriendRequestPending
+                        ? Colors.orange[700]
+                        : Colors.grey[600],
+                fontSize: 14,
+              ),
             ),
           ),
         ],
@@ -114,6 +128,7 @@ class _ChatInputState extends State<ChatInput> {
         border: Border(top: BorderSide(color: Colors.blue[200]!)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -121,7 +136,7 @@ class _ChatInputState extends State<ChatInput> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '${widget.otherUserName} sent you a friend request',
+                  'Friend request received from ${widget.otherUserName}',
                   style: TextStyle(color: Colors.blue[700], fontSize: 14),
                 ),
               ),
@@ -233,32 +248,101 @@ class _ChatInputState extends State<ChatInput> {
 
   Widget _buildNormalInput() {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey[300]!)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                hintText: 'Type a message...',
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+          // Reply preview
+          if (widget.replyingTo != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
               ),
-              maxLines: null,
-              textCapitalization: TextCapitalization.sentences,
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: mainColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Replying to ${widget.replyingTo!.senderName}',
+                          style: TextStyle(
+                            color: mainColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.replyingTo!.content,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      // Clear reply - this would need to be handled by parent
+                      // For now, we'll just close the reply UI
+                      widget.onClearReply?.call();
+                    },
+                    icon: const Icon(Icons.close, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: _sendMessage,
-            icon: const Icon(Icons.send, color: mainColor),
+          ],
+
+          // Message input
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText:
+                          widget.replyingTo != null
+                              ? 'Reply to message...'
+                              : 'Type a message...',
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    maxLines: null,
+                    textCapitalization: TextCapitalization.sentences,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _sendMessage,
+                  icon: const Icon(Icons.send, color: mainColor),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -269,12 +353,29 @@ class _ChatInputState extends State<ChatInput> {
     final message = _messageController.text.trim();
     if (message.isNotEmpty) {
       final chatCubit = BlocProvider.of<ChatCubit>(context);
-      chatCubit.sendMessage(
-        receiverId: widget.otherUserId,
-        receiverName: widget.otherUserName,
-        content: message,
-      );
+
+      if (widget.replyingTo != null) {
+        // Send reply message
+        chatCubit.sendReplyMessage(
+          receiverId: widget.otherUserId,
+          receiverName: widget.otherUserName,
+          content: message,
+          replyToMessageId: widget.replyingTo!.id,
+          replyToMessageContent: widget.replyingTo!.content,
+          replyToSenderName: widget.replyingTo!.senderName,
+        );
+      } else {
+        // Send normal message
+        chatCubit.sendMessage(
+          receiverId: widget.otherUserId,
+          receiverName: widget.otherUserName,
+          content: message,
+        );
+      }
+
       _messageController.clear();
+      // Clear reply state after sending
+      widget.onClearReply?.call();
     }
   }
 
@@ -302,10 +403,103 @@ class _ChatInputState extends State<ChatInput> {
     );
   }
 
+  Future<void> _acceptFriendRequest() async {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      if (currentUserId == null) return;
+
+      // Find the existing request ID
+      final requestId = await _friendsService.getFriendRequestId(
+        widget.otherUserId,
+        currentUserId,
+      );
+
+      if (requestId != null) {
+        // Accept the existing request
+        await _friendsService.acceptFriendRequest(requestId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Friend request accepted!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Refresh friendship status
+          widget.onRefreshFriendshipStatus?.call();
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Friend request not found'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error accepting friend request: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _rejectFriendRequest() async {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      if (currentUserId == null) return;
+
+      // Find the existing request ID
+      final requestId = await _friendsService.getFriendRequestId(
+        widget.otherUserId,
+        currentUserId,
+      );
+
+      if (requestId != null) {
+        // Reject the existing request
+        await _friendsService.rejectFriendRequest(requestId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Friend request declined'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          // Refresh friendship status
+          widget.onRefreshFriendshipStatus?.call();
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Friend request not found'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error declining friend request: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _sendFriendRequest() async {
     try {
-      final friendsService = FriendsService();
-      await friendsService.sendFriendRequestById(
+      await _friendsService.sendFriendRequestById(
         receiverId: widget.otherUserId,
         message: 'Hi! I\'d like to be your friend.',
       );
@@ -327,106 +521,6 @@ class _ChatInputState extends State<ChatInput> {
             backgroundColor: Colors.red,
           ),
         );
-      }
-    }
-  }
-
-  Future<void> _acceptFriendRequest() async {
-    try {
-      final friendsService = FriendsService();
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-      if (currentUserId == null) return;
-
-      // Get the friend request ID
-      final requestId = await friendsService.getFriendRequestId(
-        widget.otherUserId,
-        currentUserId,
-      );
-
-      if (requestId != null) {
-        await friendsService.acceptFriendRequest(requestId);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Friend request accepted!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          widget.onRefreshFriendshipStatus?.call();
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Friend request not found'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        String errorMessage = 'Error accepting friend request';
-        if (e.toString().contains('blocked')) {
-          errorMessage =
-              'Cannot accept request - user is blocked or has blocked you';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-        );
-        // Refresh the friendship status to update UI
-        widget.onRefreshFriendshipStatus?.call();
-      }
-    }
-  }
-
-  Future<void> _rejectFriendRequest() async {
-    try {
-      final friendsService = FriendsService();
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-      if (currentUserId == null) return;
-
-      // Get the friend request ID
-      final requestId = await friendsService.getFriendRequestId(
-        widget.otherUserId,
-        currentUserId,
-      );
-
-      if (requestId != null) {
-        await friendsService.rejectFriendRequest(requestId);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Friend request declined'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-          widget.onRefreshFriendshipStatus?.call();
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Friend request not found'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        String errorMessage = 'Error declining friend request';
-        if (e.toString().contains('blocked')) {
-          errorMessage =
-              'Cannot decline request - user is blocked or has blocked you';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-        );
-        // Refresh the friendship status to update UI
-        widget.onRefreshFriendshipStatus?.call();
       }
     }
   }

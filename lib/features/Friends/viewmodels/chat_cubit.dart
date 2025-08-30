@@ -162,6 +162,44 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  /// Toggle a reaction on a message
+  Future<void> toggleReaction(String messageId, String emoji) async {
+    try {
+      await _chatService.toggleReaction(messageId, emoji);
+      // Messages will automatically update via stream, no need to reload
+    } catch (e) {
+      if (!isClosed) {
+        emit(ChatErrorState(e.toString()));
+      }
+    }
+  }
+
+  /// Send a reply message
+  Future<void> sendReplyMessage({
+    required String receiverId,
+    required String receiverName,
+    required String content,
+    required String replyToMessageId,
+    required String replyToMessageContent,
+    required String replyToSenderName,
+  }) async {
+    try {
+      await _chatService.sendReplyMessage(
+        receiverId: receiverId,
+        receiverName: receiverName,
+        content: content,
+        replyToMessageId: replyToMessageId,
+        replyToMessageContent: replyToMessageContent,
+        replyToSenderName: replyToSenderName,
+      );
+      // Messages will automatically update via stream, no need to reload
+    } catch (e) {
+      if (!isClosed) {
+        emit(ChatErrorState(e.toString()));
+      }
+    }
+  }
+
   @override
   Future<void> close() {
     stopStreams();

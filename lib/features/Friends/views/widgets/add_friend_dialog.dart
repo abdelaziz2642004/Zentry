@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friend_requests_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_states.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/friends_service.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 
 class AddFriendDialog extends StatefulWidget {
   const AddFriendDialog({super.key});
@@ -13,13 +16,17 @@ class AddFriendDialog extends StatefulWidget {
 }
 
 class _AddFriendDialogState extends State<AddFriendDialog> {
+  final FriendsService _friendsService = FriendsService();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-  final FriendsService _friendsService = FriendsService();
+  List<Map<String, dynamic>> _searchResults = [];
   String? _selectedUserId;
   String? _selectedUsername;
-  List<Map<String, dynamic>> _searchResults = [];
   bool _isSearching = false;
+  bool _isSearchingByCode = false;
+  bool _isCheckingRequest = false;
+  bool _hasExistingRequest = false;
+  bool _isAlreadyFriends = false;
 
   @override
   void dispose() {
@@ -33,28 +40,148 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
       setState(() {
         _searchResults = [];
         _isSearching = false;
+        _isSearchingByCode = false;
       });
       return;
     }
 
     setState(() {
       _isSearching = true;
+      _isSearchingByCode = false;
     });
 
     try {
-      final results = await _friendsService.searchUsers(query);
-      setState(() {
-        _searchResults = results;
-        _isSearching = false;
-      });
+      // Only search by friend code (6 characters, alphanumeric)
+      final isFriendCode =
+          query.trim().length == 6 &&
+          RegExp(r'^[A-Z0-9]{6}$').hasMatch(query.trim().toUpperCase());
+
+      if (isFriendCode) {
+        // Search by friend code
+        final userData = await _friendsService.searchUserByFriendCode(
+          query.trim(),
+        );
+        setState(() {
+          _searchResults = userData != null ? [userData] : [];
+          _isSearching = false;
+          _isSearchingByCode = true;
+        });
+      } else {
+        // Show error for invalid friend code format
+        setState(() {
+          _searchResults = [];
+          _isSearching = false;
+          _isSearchingByCode = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enter a valid 6-character friend code'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
     } catch (e) {
       setState(() {
         _isSearching = false;
+        _isSearchingByCode = false;
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error searching users: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _checkExistingRequest(String userId) async {
+    setState(() {
+      _isCheckingRequest = true;
+    });
+
+    try {
+      // Check if there's any pending request between the users
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      if (currentUserId == null) return;
+
+      print('Checking existing request between $currentUserId and $userId');
+
+      // Check if already friends
+      final areFriends = await _friendsService.checkIfFriends(
+        currentUserId,
+        userId,
+      );
+
+      // Check if there's any pending request
+      final hasRequest = await _friendsService.checkIfAnyFriendRequestPending(
+        currentUserId,
+        userId,
+      );
+
+      print('Are friends: $areFriends, Has existing request: $hasRequest');
+
+      if (mounted) {
+        setState(() {
+          _isAlreadyFriends = areFriends;
+          _hasExistingRequest = hasRequest;
+          _isCheckingRequest = false;
+        });
+      }
+    } catch (e) {
+      print('Error checking existing request: $e');
+      if (mounted) {
+        setState(() {
+          _isCheckingRequest = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _acceptExistingRequest() async {
+    if (_selectedUserId == null) return;
+
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      if (currentUserId == null) return;
+
+      // Find the existing request ID
+      final requestId = await _friendsService.getFriendRequestId(
+        _selectedUserId!,
+        currentUserId,
+      );
+
+      if (requestId != null) {
+        // Accept the existing request
+        await _friendsService.acceptFriendRequest(requestId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Friend request accepted!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Friend request not found'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error accepting friend request: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -111,7 +238,8 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  labelText: 'Search by username',
+                  labelText: 'Search by friend code',
+                  hintText: 'Enter 6-character friend code',
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon:
                       _isSearching
@@ -152,27 +280,79 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
                           final isSelected = _selectedUserId == user['id'];
 
                           return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage:
-                                  user['imageUrl'] != null &&
-                                          user['imageUrl'].isNotEmpty
-                                      ? NetworkImage(user['imageUrl'])
-                                      : null,
-                              child:
-                                  user['imageUrl'] == null ||
-                                          user['imageUrl'].isEmpty
-                                      ? Text(
-                                        (user['fullName'] ?? 'U')[0]
-                                            .toUpperCase(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                            leading: StreamBuilder<DocumentSnapshot>(
+                              stream:
+                                  FirebaseFirestore.instance
+                                      .collection(
+                                        FirebaseConstants.usersCollection,
                                       )
-                                      : null,
+                                      .doc(user['id'])
+                                      .snapshots(),
+                              builder: (context, snapshot) {
+                                String? imageUrl;
+                                if (snapshot.hasData && snapshot.data!.exists) {
+                                  final data =
+                                      snapshot.data!.data()
+                                          as Map<String, dynamic>?;
+                                  if (data != null) {
+                                    imageUrl =
+                                        data[FirebaseConstants.imageUrlField];
+                                    if (imageUrl != null && imageUrl.isEmpty)
+                                      imageUrl = null;
+                                  }
+                                }
+
+                                if (imageUrl != null && imageUrl.isNotEmpty) {
+                                  return CircleAvatar(
+                                    backgroundImage: NetworkImage(imageUrl),
+                                    onBackgroundImageError: (
+                                      exception,
+                                      stackTrace,
+                                    ) {
+                                      // Handle image loading error
+                                    },
+                                  );
+                                } else {
+                                  return CircleAvatar(
+                                    backgroundColor: Colors.grey[400],
+                                    child: Text(
+                                      (user['fullName'] ?? 'U')[0]
+                                          .toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
                             ),
-                            title: Text(user['fullName'] ?? ''),
-                            subtitle: Text('@${user['username']}'),
+                            title: StreamBuilder<DocumentSnapshot>(
+                              stream:
+                                  FirebaseFirestore.instance
+                                      .collection(
+                                        FirebaseConstants.usersCollection,
+                                      )
+                                      .doc(user['id'])
+                                      .snapshots(),
+                              builder: (context, snapshot) {
+                                String displayName = user['fullName'] ?? '';
+                                if (snapshot.hasData && snapshot.data!.exists) {
+                                  final data =
+                                      snapshot.data!.data()
+                                          as Map<String, dynamic>?;
+                                  if (data != null) {
+                                    displayName =
+                                        data[FirebaseConstants.fullNameField] ??
+                                        displayName;
+                                  }
+                                }
+                                return Text(displayName);
+                              },
+                            ),
+                            subtitle: Text(
+                              'Friend Code: ${user['friendCode'] ?? ''}',
+                            ),
                             trailing:
                                 isSelected
                                     ? const Icon(
@@ -184,7 +364,10 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
                               setState(() {
                                 _selectedUserId = user['id'];
                                 _selectedUsername = user['username'];
+                                _hasExistingRequest = false; // Reset state
+                                _isAlreadyFriends = false; // Reset state
                               });
+                              _checkExistingRequest(user['id']);
                             },
                           );
                         },
@@ -218,25 +401,50 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
                   BlocBuilder<FriendRequestsCubit, FriendsState>(
                     builder: (context, state) {
                       final isLoading = state is FriendsLoadingState;
+                      final isDisabled =
+                          _selectedUserId == null ||
+                          isLoading ||
+                          _isCheckingRequest;
+
+                      // Determine button text and action
+                      String buttonText = 'Send Request';
+                      VoidCallback? buttonAction;
+
+                      if (_isCheckingRequest) {
+                        buttonText = 'Checking...';
+                      } else if (_isAlreadyFriends) {
+                        buttonText = 'Already Friends';
+                        buttonAction = null; // Disable button
+                      } else if (_hasExistingRequest) {
+                        buttonText = 'Accept Request';
+                        buttonAction = () => _acceptExistingRequest();
+                      } else if (!isDisabled) {
+                        buttonAction = () {
+                          context
+                              .read<FriendRequestsCubit>()
+                              .sendFriendRequestById(
+                                receiverId: _selectedUserId!,
+                                message: _messageController.text,
+                              );
+                        };
+                      }
 
                       return ElevatedButton(
                         onPressed:
-                            _selectedUserId != null && !isLoading
-                                ? () {
-                                  context
-                                      .read<FriendRequestsCubit>()
-                                      .sendFriendRequestById(
-                                        receiverId: _selectedUserId!,
-                                        message: _messageController.text,
-                                      );
-                                }
-                                : null,
+                            isDisabled || _isAlreadyFriends
+                                ? null
+                                : buttonAction,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: mainColor,
+                          backgroundColor:
+                              _isAlreadyFriends
+                                  ? Colors.grey
+                                  : _hasExistingRequest
+                                  ? Colors.green
+                                  : mainColor,
                           foregroundColor: Colors.white,
                         ),
                         child:
-                            isLoading
+                            _isCheckingRequest
                                 ? const SizedBox(
                                   width: 16,
                                   height: 16,
@@ -247,7 +455,18 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
                                     ),
                                   ),
                                 )
-                                : const Text('Send Request'),
+                                : isLoading
+                                ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                                : Text(buttonText),
                       );
                     },
                   ),

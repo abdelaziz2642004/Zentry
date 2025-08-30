@@ -3,18 +3,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/models/chat_message.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
 import 'package:intl/intl.dart';
 
 class RoomInvitationBubble extends StatelessWidget {
   final ChatMessage message;
   final bool isMe;
   final VoidCallback onJoinRoom;
+  final Function(String)? onViewProfile;
 
   const RoomInvitationBubble({
     super.key,
     required this.message,
     required this.isMe,
     required this.onJoinRoom,
+    this.onViewProfile,
   });
 
   @override
@@ -149,48 +152,51 @@ class RoomInvitationBubble extends StatelessWidget {
 
   Widget _buildAvatar() {
     // Listen to user's image URL from Firestore
-    return StreamBuilder<DocumentSnapshot>(
-      stream:
-          FirebaseFirestore.instance
-              .collection(FirebaseConstants.usersCollection)
-              .doc(message.senderId)
-              .snapshots(),
-      builder: (context, snapshot) {
-        String? imageUrl;
-        if (snapshot.hasData && snapshot.data!.exists) {
-          final data = snapshot.data!.data() as Map<String, dynamic>?;
-          if (data != null) {
-            imageUrl = data[FirebaseConstants.imageUrlField];
-            if (imageUrl != null && imageUrl.isEmpty) imageUrl = null;
+    return GestureDetector(
+      onTap: () => onViewProfile?.call(message.senderId),
+      child: StreamBuilder<DocumentSnapshot>(
+        stream:
+            FirebaseFirestore.instance
+                .collection(FirebaseConstants.usersCollection)
+                .doc(message.senderId)
+                .snapshots(),
+        builder: (context, snapshot) {
+          String? imageUrl;
+          if (snapshot.hasData && snapshot.data!.exists) {
+            final data = snapshot.data!.data() as Map<String, dynamic>?;
+            if (data != null) {
+              imageUrl = data[FirebaseConstants.imageUrlField];
+              if (imageUrl != null && imageUrl.isEmpty) imageUrl = null;
+            }
           }
-        }
 
-        if (imageUrl != null && imageUrl.isNotEmpty) {
-          return CircleAvatar(
-            radius: 16,
-            backgroundImage: NetworkImage(imageUrl),
-            onBackgroundImageError: (exception, stackTrace) {
-              // Handle image loading error
-            },
-          );
-        } else {
-          return CircleAvatar(
-            radius: 16,
-            backgroundColor:
-                isMe ? mainColor.withOpacity(0.8) : Colors.grey[400],
-            child: Text(
-              message.senderName.isNotEmpty
-                  ? message.senderName[0].toUpperCase()
-                  : '?',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            return CircleAvatar(
+              radius: 16,
+              backgroundImage: NetworkImage(imageUrl),
+              onBackgroundImageError: (exception, stackTrace) {
+                // Handle image loading error
+              },
+            );
+          } else {
+            return CircleAvatar(
+              radius: 16,
+              backgroundColor:
+                  isMe ? mainColor.withOpacity(0.8) : Colors.grey[400],
+              child: Text(
+                message.senderName.isNotEmpty
+                    ? message.senderName[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 

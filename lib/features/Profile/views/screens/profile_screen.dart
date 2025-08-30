@@ -9,6 +9,7 @@ import 'package:zentry_pomodoro_app/features/Profile/data/repositories/AccountOP
 import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile/profile_info.dart';
 import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile/profile_options.dart';
 import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile/profile_pic.dart';
+import 'package:zentry_pomodoro_app/features/Friends/views/widgets/friend_code_display.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -65,6 +66,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ProfilePicture(onUploadStateChanged: setUploadingState),
                   const SizedBox(height: 16),
                   const ProfileInfo(),
+                  const SizedBox(height: 24),
+                  const FriendCodeDisplay(),
+                  const SizedBox(height: 24),
                   const Divider(),
                   BlocProvider(
                     create: (context) => AccountCubit(AccountopsRepo()),

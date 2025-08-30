@@ -19,6 +19,7 @@ class FirebaseConstants {
   static const String notificationsField = 'notifications';
   static const String sessionIdField = 'SessionID';
   static const String idField = 'id';
+  static const String friendCodeField = 'friendCode';
 
   // Timezone and Daily Tracking Fields
   static const String timezoneField = 'timezone';

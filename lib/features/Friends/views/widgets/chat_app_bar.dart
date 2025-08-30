@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
 
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String otherUserId;
@@ -19,42 +20,51 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Row(
         children: [
-          StreamBuilder<DocumentSnapshot>(
-            stream:
-                FirebaseFirestore.instance
-                    .collection(FirebaseConstants.usersCollection)
-                    .doc(otherUserId)
-                    .snapshots(),
-            builder: (context, snapshot) {
-              String? imageUrl;
-              if (snapshot.hasData && snapshot.data!.exists) {
-                final data = snapshot.data!.data() as Map<String, dynamic>?;
-                if (data != null) {
-                  imageUrl = data[FirebaseConstants.imageUrlField];
-                  if (imageUrl != null && imageUrl.isEmpty) imageUrl = null;
-                }
-              }
-
-              return CircleAvatar(
-                radius: 18,
-                backgroundImage:
-                    imageUrl != null && imageUrl.isNotEmpty
-                        ? NetworkImage(imageUrl)
-                        : null,
-                child:
-                    imageUrl == null || imageUrl.isEmpty
-                        ? Text(
-                          otherUserName.isNotEmpty
-                              ? otherUserName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                        : null,
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ViewProfileScreen(userId: otherUserId),
+                ),
               );
             },
+            child: StreamBuilder<DocumentSnapshot>(
+              stream:
+                  FirebaseFirestore.instance
+                      .collection(FirebaseConstants.usersCollection)
+                      .doc(otherUserId)
+                      .snapshots(),
+              builder: (context, snapshot) {
+                String? imageUrl;
+                if (snapshot.hasData && snapshot.data!.exists) {
+                  final data = snapshot.data!.data() as Map<String, dynamic>?;
+                  if (data != null) {
+                    imageUrl = data[FirebaseConstants.imageUrlField];
+                    if (imageUrl != null && imageUrl.isEmpty) imageUrl = null;
+                  }
+                }
+
+                return CircleAvatar(
+                  radius: 18,
+                  backgroundImage:
+                      imageUrl != null && imageUrl.isNotEmpty
+                          ? NetworkImage(imageUrl)
+                          : null,
+                  child:
+                      imageUrl == null || imageUrl.isEmpty
+                          ? Text(
+                            otherUserName.isNotEmpty
+                                ? otherUserName[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                          : null,
+                );
+              },
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

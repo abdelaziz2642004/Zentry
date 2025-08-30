@@ -19,6 +19,12 @@ class ChatMessage {
   final String? roomName;
   final String? inviterName;
 
+  // For reactions and replies
+  final Map<String, List<String>>? reactions; // emoji -> list of user IDs
+  final String? replyToMessageId;
+  final String? replyToMessageContent;
+  final String? replyToSenderName;
+
   ChatMessage({
     required this.id,
     required this.senderId,
@@ -32,6 +38,10 @@ class ChatMessage {
     this.roomCode,
     this.roomName,
     this.inviterName,
+    this.reactions,
+    this.replyToMessageId,
+    this.replyToMessageContent,
+    this.replyToSenderName,
   });
 
   factory ChatMessage.fromMap(Map<String, dynamic> map, String id) {
@@ -54,6 +64,17 @@ class ChatMessage {
       roomCode: map['roomCode'],
       roomName: map['roomName'],
       inviterName: map['inviterName'],
+      reactions:
+          map['reactions'] != null
+              ? Map<String, List<String>>.from(
+                (map['reactions'] as Map<String, dynamic>).map(
+                  (key, value) => MapEntry(key, List<String>.from(value)),
+                ),
+              )
+              : null,
+      replyToMessageId: map['replyToMessageId'],
+      replyToMessageContent: map['replyToMessageContent'],
+      replyToSenderName: map['replyToSenderName'],
     );
   }
 
@@ -71,6 +92,11 @@ class ChatMessage {
       if (roomCode != null) 'roomCode': roomCode,
       if (roomName != null) 'roomName': roomName,
       if (inviterName != null) 'inviterName': inviterName,
+      if (reactions != null) 'reactions': reactions,
+      if (replyToMessageId != null) 'replyToMessageId': replyToMessageId,
+      if (replyToMessageContent != null)
+        'replyToMessageContent': replyToMessageContent,
+      if (replyToSenderName != null) 'replyToSenderName': replyToSenderName,
     };
   }
 
@@ -87,6 +113,10 @@ class ChatMessage {
     String? roomCode,
     String? roomName,
     String? inviterName,
+    Map<String, List<String>>? reactions,
+    String? replyToMessageId,
+    String? replyToMessageContent,
+    String? replyToSenderName,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -101,6 +131,11 @@ class ChatMessage {
       roomCode: roomCode ?? this.roomCode,
       roomName: roomName ?? this.roomName,
       inviterName: inviterName ?? this.inviterName,
+      reactions: reactions ?? this.reactions,
+      replyToMessageId: replyToMessageId ?? this.replyToMessageId,
+      replyToMessageContent:
+          replyToMessageContent ?? this.replyToMessageContent,
+      replyToSenderName: replyToSenderName ?? this.replyToSenderName,
     );
   }
 }

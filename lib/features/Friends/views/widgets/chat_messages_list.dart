@@ -5,17 +5,31 @@ import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_cubit.dart'
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_states.dart';
 import 'package:zentry_pomodoro_app/features/Friends/views/widgets/message_bubble.dart';
 import 'package:zentry_pomodoro_app/features/Friends/views/widgets/room_invitation_bubble.dart';
+import 'package:zentry_pomodoro_app/features/Friends/data/models/chat_message.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
 
 class ChatMessagesList extends StatefulWidget {
   final String otherUserId;
+  final String otherUserName;
   final ScrollController scrollController;
-  final Function() onScrollToBottom;
+  final VoidCallback onScrollToBottom;
+  final bool isBlocked;
+  final bool isBlockedByUser;
+  final bool isFriend;
+  final bool isAnyRequestPending;
+  final Function(ChatMessage?)? onReplyStateChanged;
 
   const ChatMessagesList({
     super.key,
     required this.otherUserId,
+    required this.otherUserName,
     required this.scrollController,
     required this.onScrollToBottom,
+    required this.isBlocked,
+    required this.isBlockedByUser,
+    required this.isFriend,
+    required this.isAnyRequestPending,
+    this.onReplyStateChanged,
   });
 
   @override
@@ -89,14 +103,45 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
         final currentUser = FirebaseAuth.instance.currentUser;
         final isMe = currentUser?.uid == message.senderId;
 
-        if (message.type == 'room_invitation') {
+        if (message.type == MessageType.roomInvitation) {
           return RoomInvitationBubble(
             message: message,
             isMe: isMe,
             onJoinRoom: () => _handleJoinRoom(message),
+            onViewProfile: (userId) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ViewProfileScreen(userId: userId),
+                ),
+              );
+            },
           );
         } else {
-          return MessageBubble(message: message, isMe: isMe);
+          return MessageBubble(
+            message: message,
+            isMe: isMe,
+            isBlocked: widget.isBlocked,
+            isBlockedByUser: widget.isBlockedByUser,
+            isFriend: widget.isFriend,
+            isAnyRequestPending: widget.isAnyRequestPending,
+            onDelete: () {
+              context.read<ChatCubit>().deleteMessage(message.id);
+            },
+            onReply: (replyToMessage) {
+              // Set the reply state
+              widget.onReplyStateChanged?.call(replyToMessage);
+            },
+            onReact: (emoji) {
+              context.read<ChatCubit>().toggleReaction(message.id, emoji);
+            },
+            onViewProfile: (userId) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ViewProfileScreen(userId: userId),
+                ),
+              );
+            },
+          );
         }
       },
     );

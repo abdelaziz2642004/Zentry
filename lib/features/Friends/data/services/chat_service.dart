@@ -276,4 +276,108 @@ class ChatService {
 
     await _firestore.collection('directMessages').doc(messageId).delete();
   }
+
+  /// Add or remove a reaction to a message
+  Future<void> toggleReaction(String messageId, String emoji) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) throw Exception('User not authenticated');
+
+    final messageRef = _firestore.collection('directMessages').doc(messageId);
+
+    await _firestore.runTransaction((transaction) async {
+      final messageDoc = await transaction.get(messageRef);
+
+      if (!messageDoc.exists) {
+        throw Exception('Message not found');
+      }
+
+      final data = messageDoc.data()!;
+      final reactions = Map<String, List<String>>.from(
+        (data['reactions'] as Map<String, dynamic>?)?.map(
+              (key, value) => MapEntry(key, List<String>.from(value)),
+            ) ??
+            {},
+      );
+
+      final userId = currentUser.uid;
+      final newReactions = <String, List<String>>{};
+
+      // Check if user already reacted with this emoji
+      bool userHasReacted = false;
+      for (final entry in reactions.entries) {
+        if (entry.key == emoji) {
+          if (entry.value.contains(userId)) {
+            // Remove reaction
+            final newList = List<String>.from(entry.value)..remove(userId);
+            if (newList.isNotEmpty) {
+              newReactions[emoji] = newList;
+            }
+            userHasReacted = true;
+          } else {
+            // Add reaction (but first remove from others)
+            newReactions[emoji] = [userId];
+            userHasReacted = true;
+          }
+        } else {
+          // Keep other emoji reactions but remove this user
+          final newList = List<String>.from(entry.value)..remove(userId);
+          if (newList.isNotEmpty) {
+            newReactions[entry.key] = newList;
+          }
+        }
+      }
+
+      // If user hasn't reacted with this emoji yet, add it
+      if (!userHasReacted) {
+        newReactions[emoji] = [userId];
+      }
+
+      transaction.update(messageRef, {'reactions': newReactions});
+    });
+  }
+
+  /// Send a reply message
+  Future<void> sendReplyMessage({
+    required String receiverId,
+    required String receiverName,
+    required String content,
+    required String replyToMessageId,
+    required String replyToMessageContent,
+    required String replyToSenderName,
+  }) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) throw Exception('User not authenticated');
+
+    // Check if users can interact (not blocked)
+    final canInteract = await _blockService.canUsersInteract(
+      currentUser.uid,
+      receiverId,
+    );
+    if (!canInteract) {
+      throw Exception(
+        'Cannot send message - user is blocked or has blocked you',
+      );
+    }
+
+    // Get current user data
+    final userData = await _userService.getUserData(currentUser.uid);
+    if (userData == null) throw Exception('User data not found');
+
+    final message = ChatMessage(
+      id: '', // Will be set by Firestore
+      senderId: currentUser.uid,
+      senderName: userData[FirebaseConstants.fullNameField] ?? '',
+      receiverId: receiverId,
+      receiverName: receiverName,
+      content: content,
+      type: MessageType.text,
+      timestamp: DateTime.now(),
+      isRead: false,
+      replyToMessageId: replyToMessageId,
+      replyToMessageContent: replyToMessageContent,
+      replyToSenderName: replyToSenderName,
+    );
+
+    await _firestore.collection('directMessages').add(message.toMap());
+  }
 }

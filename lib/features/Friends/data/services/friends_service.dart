@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/models/friend.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/models/friend_request.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/block_service.dart';
+import 'package:zentry_pomodoro_app/features/Friends/data/services/friend_code_service.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 
 class FriendsService {
@@ -11,6 +13,7 @@ class FriendsService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
   final BlockService _blockService = BlockService();
+  final FriendCodeService _friendCodeService = FriendCodeService();
 
   /// Send a friend request
   Future<void> sendFriendRequest({
@@ -144,13 +147,24 @@ class FriendsService {
       throw Exception('Already friends');
     }
 
-    // Check if request already exists
+    // Check if request already exists from current user to receiver
     final existingRequest = await _checkExistingRequest(
       currentUser.uid,
       receiverId,
     );
     if (existingRequest) {
       throw Exception('Friend request already sent');
+    }
+
+    // Check if request already exists from receiver to current user (mutual friend request logic)
+    final reverseRequest = await _checkExistingRequest(
+      receiverId,
+      currentUser.uid,
+    );
+    if (reverseRequest) {
+      // If both users sent requests to each other, automatically make them friends
+      await _handleMutualFriendRequest(currentUser.uid, receiverId);
+      return;
     }
 
     // Create friend request
@@ -167,6 +181,42 @@ class FriendsService {
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Handle mutual friend requests - automatically make users friends
+  Future<void> _handleMutualFriendRequest(
+    String userId1,
+    String userId2,
+  ) async {
+    try {
+      // Find and update the existing request from user2 to user1
+      final existingRequestQuery =
+          await _firestore
+              .collection('friendRequests')
+              .where('senderId', isEqualTo: userId2)
+              .where('receiverId', isEqualTo: userId1)
+              .where('status', isEqualTo: 'pending')
+              .get();
+
+      if (existingRequestQuery.docs.isNotEmpty) {
+        final requestDoc = existingRequestQuery.docs.first;
+
+        // Update the existing request to accepted
+        await requestDoc.reference.update({
+          'status': 'accepted',
+          'respondedAt': FieldValue.serverTimestamp(),
+          'mutualRequest': true,
+        });
+
+        // Add both users to each other's friends list
+        await _addToFriendsList(userId1, userId2);
+
+        print('Mutual friend request detected - users are now friends');
+      }
+    } catch (e) {
+      print('Error handling mutual friend request: $e');
+      throw Exception('Error processing mutual friend request');
+    }
   }
 
   /// Get pending friend requests for current user (filtered to exclude blocked users)
@@ -540,6 +590,38 @@ class FriendsService {
     }
 
     return users;
+  }
+
+  /// Search user by friend code
+  Future<Map<String, dynamic>?> searchUserByFriendCode(String code) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return null;
+
+    if (code.trim().isEmpty) return null;
+
+    try {
+      final userData = await _friendCodeService.findUserByFriendCode(
+        code.trim(),
+      );
+
+      if (userData != null && userData['id'] != currentUser.uid) {
+        // Check if user is blocked
+        final isBlocked = await _blockService.isUserBlocked(userData['id']);
+        final isBlockedByUser = await _blockService.isBlockedByUser(
+          userData['id'],
+        );
+
+        // Only return user if neither has blocked the other
+        if (!isBlocked && !isBlockedByUser) {
+          return userData;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('Error searching user by friend code: $e');
+      return null;
+    }
   }
 
   /// Check if two users are friends

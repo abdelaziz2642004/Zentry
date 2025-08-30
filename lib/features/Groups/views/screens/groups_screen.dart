@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:zentry_pomodoro_app/features/Groups/viewmodels/groups_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Groups/viewmodels/discovery_groups_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Groups/viewmodels/my_groups_cubit.dart';
@@ -162,26 +164,20 @@ class _GroupsScreenState extends State<GroupsScreen>
   Widget _buildDiscoverTab() {
     return BlocBuilder<DiscoveryGroupsCubit, GroupsState>(
       builder: (context, state) {
-        print(state.runtimeType);
         // Handle loading state
         if (state is PublicGroupsLoadingState) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // Handle loaded states
-        if (state is PublicGroupsLoadedState ||
-            state is GroupsSearchResultState) {
-          final groups =
-              state is PublicGroupsLoadedState
-                  ? state.groups
-                  : (state as GroupsSearchResultState).groups;
-
+        // Handle loaded state
+        if (state is PublicGroupsLoadedState) {
+          final groups = state.groups;
           if (groups.isEmpty) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.groups_outlined, size: 64, color: Colors.grey),
+                  Icon(Icons.search_outlined, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
                     'No groups found',
@@ -206,11 +202,8 @@ class _GroupsScreenState extends State<GroupsScreen>
               itemCount: groups.length,
               itemBuilder: (context, index) {
                 final group = groups[index];
-                final isUserMember = _isUserMemberOfGroup(group.id);
-
-                return GroupCard(
+                return GroupCardWithMembership(
                   group: group,
-                  isUserMember: isUserMember,
                   onJoin: () {
                     if (group.isPrivate) {
                       _showJoinPrivateGroupDialog(group);
@@ -219,7 +212,8 @@ class _GroupsScreenState extends State<GroupsScreen>
                     }
                   },
                   onChat:
-                      isUserMember ? () => _navigateToGroupChat(group) : null,
+                      (isMember) =>
+                          isMember ? _navigateToGroupChat(group) : null,
                 );
               },
             ),
@@ -297,13 +291,14 @@ class _GroupsScreenState extends State<GroupsScreen>
               itemCount: state.groups.length,
               itemBuilder: (context, index) {
                 final group = state.groups[index];
-                return GroupCard(
+                return GroupCardWithMembership(
                   group: group,
-                  isUserMember: true,
                   onLeave: () {
                     _showLeaveGroupDialog(group);
                   },
-                  onChat: () => _navigateToGroupChat(group),
+                  onChat:
+                      (isMember) =>
+                          isMember ? _navigateToGroupChat(group) : null,
                 );
               },
             ),
@@ -339,15 +334,6 @@ class _GroupsScreenState extends State<GroupsScreen>
         return const Center(child: CircularProgressIndicator());
       },
     );
-  }
-
-  bool _isUserMemberOfGroup(String groupId) {
-    // Check if user is member by looking at the current state of MyGroupsCubit
-    final myGroupsState = _myGroupsCubit.state;
-    if (myGroupsState is UserGroupsLoadedState) {
-      return myGroupsState.groups.any((group) => group.id == groupId);
-    }
-    return false;
   }
 
   void _showCreateGroupDialog() {
@@ -398,6 +384,56 @@ class _GroupsScreenState extends State<GroupsScreen>
   void _navigateToGroupChat(dynamic group) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => GroupChatScreen(group: group)),
+    );
+  }
+}
+
+// Widget that uses StreamBuilder to check membership status in real-time
+class GroupCardWithMembership extends StatelessWidget {
+  final dynamic group;
+  final VoidCallback? onJoin;
+  final VoidCallback? onLeave;
+  final Function(bool)? onChat;
+
+  const GroupCardWithMembership({
+    super.key,
+    required this.group,
+    this.onJoin,
+    this.onLeave,
+    this.onChat,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      return GroupCard(
+        group: group,
+        isUserMember: false,
+        onJoin: onJoin,
+        onChat: onChat != null ? () => onChat!(false) : null,
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream:
+          FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .collection('joinedGroups')
+              .doc(group.id)
+              .snapshots(),
+      builder: (context, snapshot) {
+        final isMember = snapshot.hasData && snapshot.data!.exists;
+
+        return GroupCard(
+          group: group,
+          isUserMember: isMember,
+          onJoin: onJoin,
+          onLeave: onLeave,
+          onChat: onChat != null ? () => onChat!(isMember) : null,
+        );
+      },
     );
   }
 }

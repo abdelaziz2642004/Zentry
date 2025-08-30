@@ -6,6 +6,7 @@ import 'package:zentry_pomodoro_app/features/Groups/data/models/group_message.da
 import 'package:zentry_pomodoro_app/features/Groups/viewmodels/group_chat_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Groups/views/widgets/group_message_bubble.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final StudyGroup group;
@@ -20,6 +21,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late GroupChatCubit _chatCubit;
+  GroupMessage? _replyingTo;
 
   @override
   void initState() {
@@ -223,6 +225,23 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           onDelete: () {
                             _chatCubit.deleteMessage(message.id);
                           },
+                          onReact: (emoji) {
+                            _chatCubit.toggleReaction(message.id, emoji);
+                          },
+                          onReply: (replyToMessage) {
+                            setState(() {
+                              _replyingTo = replyToMessage;
+                            });
+                          },
+                          onViewProfile: (userId) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        ViewProfileScreen(userId: userId),
+                              ),
+                            );
+                          },
                         );
                       },
                     );
@@ -234,7 +253,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             ),
             // Message input
             Container(
-              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
@@ -246,57 +264,134 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                  // Reply preview
+                  if (_replyingTo != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        border: Border(
+                          bottom: BorderSide(color: Colors.grey[200]!),
                         ),
                       ),
-                      maxLines: null,
-                      textCapitalization: TextCapitalization.sentences,
-                      onSubmitted: (_) => _sendMessage(),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: mainColor,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Replying to ${_replyingTo!.senderName}',
+                                  style: TextStyle(
+                                    color: mainColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _replyingTo!.message,
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 13,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _replyingTo = null;
+                              });
+                            },
+                            icon: const Icon(Icons.close, size: 20),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  BlocBuilder<GroupChatCubit, GroupChatState>(
-                    builder: (context, state) {
-                      final isLoading =
-                          state is GroupChatLoadedState && state.isSending;
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: mainColor,
-                          borderRadius: BorderRadius.circular(24),
+                  ],
+
+                  // Message input
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            decoration: InputDecoration(
+                              hintText:
+                                  _replyingTo != null
+                                      ? 'Reply to message...'
+                                      : 'Type a message...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                            maxLines: null,
+                            textCapitalization: TextCapitalization.sentences,
+                            onSubmitted: (_) => _sendMessage(),
+                          ),
                         ),
-                        child: IconButton(
-                          onPressed: isLoading ? null : _sendMessage,
-                          icon:
-                              isLoading
-                                  ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                  : const Icon(Icons.send, color: Colors.white),
+                        const SizedBox(width: 8),
+                        BlocBuilder<GroupChatCubit, GroupChatState>(
+                          builder: (context, state) {
+                            final isLoading =
+                                state is GroupChatLoadedState &&
+                                state.isSending;
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: mainColor,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: IconButton(
+                                onPressed: isLoading ? null : _sendMessage,
+                                icon:
+                                    isLoading
+                                        ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
+                                          ),
+                                        )
+                                        : const Icon(
+                                          Icons.send,
+                                          color: Colors.white,
+                                        ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -315,8 +410,24 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   void _sendMessage() {
     final message = _messageController.text.trim();
     if (message.isNotEmpty) {
-      _chatCubit.sendMessage(message);
+      if (_replyingTo != null) {
+        // Send reply message
+        _chatCubit.sendReplyMessage(
+          message: message,
+          replyToMessageId: _replyingTo!.id,
+          replyToMessageContent: _replyingTo!.message,
+          replyToSenderName: _replyingTo!.senderName,
+        );
+      } else {
+        // Send normal message
+        _chatCubit.sendMessage(message);
+      }
+
       _messageController.clear();
+      // Clear reply state after sending
+      setState(() {
+        _replyingTo = null;
+      });
     }
   }
 

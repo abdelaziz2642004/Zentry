@@ -10,6 +10,7 @@ import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat_messages
 import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat_input.dart';
 import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat_options_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:zentry_pomodoro_app/features/Friends/data/models/chat_message.dart';
 
 class ChatScreen extends StatefulWidget {
   final String otherUserId;
@@ -40,6 +41,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _disposed = false;
   StreamSubscription<bool>? _blockStatusSubscription;
   StreamSubscription<bool>? _blockedByUserSubscription;
+  ChatMessage? _replyingTo;
 
   @override
   void initState() {
@@ -74,8 +76,18 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: ChatMessagesList(
               otherUserId: widget.otherUserId,
+              otherUserName: widget.otherUserName,
               scrollController: _scrollController,
               onScrollToBottom: _scrollToBottom,
+              isBlocked: _isBlocked,
+              isBlockedByUser: _isBlockedByUser,
+              isFriend: _isFriend,
+              isAnyRequestPending: _isAnyRequestPending,
+              onReplyStateChanged: (replyToMessage) {
+                setState(() {
+                  _replyingTo = replyToMessage;
+                });
+              },
             ),
           ),
           _isLoadingFriendship
@@ -97,6 +109,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 isFriendRequestReceived: _isFriendRequestReceived,
                 isAnyRequestPending: _isAnyRequestPending,
                 onRefreshFriendshipStatus: _refreshFriendshipStatus,
+                replyingTo: _replyingTo,
+                onClearReply: () {
+                  setState(() {
+                    _replyingTo = null;
+                  });
+                },
               ),
         ],
       ),
@@ -112,6 +130,8 @@ class _ChatScreenState extends State<ChatScreen> {
             setState(() {
               _isBlocked = isBlocked;
             });
+            // Refresh friendship status when block status changes
+            _checkFriendshipStatus();
           }
         });
 
@@ -122,6 +142,8 @@ class _ChatScreenState extends State<ChatScreen> {
             setState(() {
               _isBlockedByUser = isBlockedByUser;
             });
+            // Refresh friendship status when block status changes
+            _checkFriendshipStatus();
           }
         });
   }
@@ -191,11 +213,7 @@ class _ChatScreenState extends State<ChatScreen> {
       builder:
           (context) => ChatOptionsDialog(
             otherUserId: widget.otherUserId,
-            otherUserName: widget.otherUserName,
             isBlocked: _isBlocked,
-            isFriend: _isFriend,
-            isFriendRequestPending: _isFriendRequestPending,
-            isAnyRequestPending: _isAnyRequestPending,
             onRefreshFriendshipStatus: _refreshFriendshipStatus,
           ),
     );

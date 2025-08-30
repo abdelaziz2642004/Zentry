@@ -6,6 +6,7 @@ import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/chat_s
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/chat/chat_header.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/chat/chat_input_field.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/chat/chat_message_bubble.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/screens/view_profile_screen.dart';
 
 class RoomChat extends StatefulWidget {
   final String roomCode;
@@ -148,6 +149,33 @@ class _RoomChatState extends State<RoomChat> {
                         onDelete: () {
                           context.read<RoomChatCubit>().deleteMessage(
                             message.id,
+                          );
+                        },
+                        onReact: (emoji) {
+                          context.read<RoomChatCubit>().toggleReaction(
+                            message.id,
+                            emoji,
+                          );
+                        },
+                        onReply: (replyToMessage) {
+                          // Handle reply - this would need to be implemented
+                          // For now, we'll just show a snackbar
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Replying to: ${replyToMessage.message}',
+                              ),
+                              backgroundColor: Colors.blue,
+                            ),
+                          );
+                        },
+                        onViewProfile: (userId) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      ViewProfileScreen(userId: userId),
+                            ),
                           );
                         },
                       );

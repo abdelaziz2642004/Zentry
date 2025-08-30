@@ -13,6 +13,11 @@ class GroupMessage {
   final GroupMessageType messageType;
   final Map<String, dynamic>? reactions;
 
+  // For replies
+  final String? replyToMessageId;
+  final String? replyToMessageContent;
+  final String? replyToSenderName;
+
   GroupMessage({
     required this.id,
     required this.groupId,
@@ -23,6 +28,9 @@ class GroupMessage {
     required this.timestamp,
     this.messageType = GroupMessageType.text,
     this.reactions,
+    this.replyToMessageId,
+    this.replyToMessageContent,
+    this.replyToSenderName,
   });
 
   factory GroupMessage.fromFirestore(DocumentSnapshot doc) {
@@ -41,6 +49,9 @@ class GroupMessage {
         orElse: () => GroupMessageType.text,
       ),
       reactions: data['reactions'],
+      replyToMessageId: data['replyToMessageId'],
+      replyToMessageContent: data['replyToMessageContent'],
+      replyToSenderName: data['replyToSenderName'],
     );
   }
 
@@ -54,6 +65,9 @@ class GroupMessage {
       'timestamp': timestamp,
       'messageType': messageType.toString().split('.').last,
       'reactions': reactions,
+      'replyToMessageId': replyToMessageId,
+      'replyToMessageContent': replyToMessageContent,
+      'replyToSenderName': replyToSenderName,
     };
   }
 
@@ -67,6 +81,9 @@ class GroupMessage {
     Timestamp? timestamp,
     GroupMessageType? messageType,
     Map<String, dynamic>? reactions,
+    String? replyToMessageId,
+    String? replyToMessageContent,
+    String? replyToSenderName,
   }) {
     return GroupMessage(
       id: id ?? this.id,
@@ -78,6 +95,10 @@ class GroupMessage {
       timestamp: timestamp ?? this.timestamp,
       messageType: messageType ?? this.messageType,
       reactions: reactions ?? this.reactions,
+      replyToMessageId: replyToMessageId ?? this.replyToMessageId,
+      replyToMessageContent:
+          replyToMessageContent ?? this.replyToMessageContent,
+      replyToSenderName: replyToSenderName ?? this.replyToSenderName,
     );
   }
 

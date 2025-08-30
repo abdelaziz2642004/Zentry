@@ -121,4 +121,70 @@ class GroupChatService {
         .doc(messageId)
         .delete();
   }
+
+  /// Update message reactions
+  Future<void> updateMessageReactions(
+    String groupId,
+    String messageId,
+    Map<String, List<String>> reactions,
+  ) async {
+    await _firestore
+        .collection('studyGroups')
+        .doc(groupId)
+        .collection('chat')
+        .doc(messageId)
+        .update({'reactions': reactions});
+  }
+
+  /// Send a reply message
+  Future<void> sendReplyMessage({
+    required String groupId,
+    required String message,
+    required String replyToMessageId,
+    required String replyToMessageContent,
+    required String replyToSenderName,
+  }) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) throw Exception('User not authenticated');
+
+    // Get current user data
+    final currentUserDoc =
+        await _firestore
+            .collection(FirebaseConstants.usersCollection)
+            .doc(currentUser.uid)
+            .get();
+
+    if (!currentUserDoc.exists) {
+      throw Exception('Current user data not found');
+    }
+
+    final currentUserData = currentUserDoc.data()!;
+
+    // Create the reply message
+    final groupMessage = GroupMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      groupId: groupId,
+      senderId: currentUser.uid,
+      senderName: currentUserData[FirebaseConstants.fullNameField],
+      senderImageUrl: currentUserData[FirebaseConstants.imageUrlField] ?? '',
+      message: message,
+      timestamp: Timestamp.now(),
+      messageType: GroupMessageType.text,
+      replyToMessageId: replyToMessageId,
+      replyToMessageContent: replyToMessageContent,
+      replyToSenderName: replyToSenderName,
+    );
+
+    // Add message to group chat subcollection
+    await _firestore
+        .collection('studyGroups')
+        .doc(groupId)
+        .collection('chat')
+        .add(groupMessage.toFirestore());
+
+    // Update group's last activity
+    await _firestore.collection('studyGroups').doc(groupId).update({
+      'lastActivity': FieldValue.serverTimestamp(),
+    });
+  }
 }
