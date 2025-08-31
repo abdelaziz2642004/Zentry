@@ -11,6 +11,7 @@ import 'package:zentry_pomodoro_app/core/constants/app_constants.dart';
 import 'package:zentry_pomodoro_app/core/constants/fonts.dart';
 import 'package:zentry_pomodoro_app/core/providers/user_provider.dart';
 import 'package:zentry_pomodoro_app/features/Profile/views/screens/settings_screen.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/screens/streaks_achievements_screen.dart';
 
 class ProfileOptions extends StatelessWidget {
   const ProfileOptions({super.key});
@@ -40,6 +41,26 @@ class ProfileOptions extends StatelessWidget {
       },
       child: Column(
         children: [
+          ListTile(
+            title: const Text(
+              'Streaks & Achievements',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: Fonts.dopisBold,
+              ),
+            ),
+            subtitle: const Text('View your progress and achievements'),
+            leading: const Icon(Icons.emoji_events, color: Colors.amber),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const StreaksAndAchievementsScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(),
           ListTile(
             title: const Text(
               AppConstants.settingsAndPreferences,

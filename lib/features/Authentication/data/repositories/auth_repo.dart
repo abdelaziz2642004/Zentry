@@ -44,6 +44,6 @@ class AuthRepo {
     if (userName.isEmpty) {
       return true;
     }
-    return await signupService.isUsernameAvailable(userName);
+    return await SignupService.isUsernameAvailable(userName);
   }
 }

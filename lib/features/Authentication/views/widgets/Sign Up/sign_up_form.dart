@@ -236,7 +236,7 @@ class _SignupFormState extends State<SignupForm> {
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   // Validate form data using service
-                  final validationError = _signupService.validateSignupForm(
+                  final validationError = SignupService.validateSignupForm(
                     email: _emailController.text,
                     username: _usernameController.text,
                     password: _passwordController.text,

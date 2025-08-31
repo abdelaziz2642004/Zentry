@@ -60,7 +60,7 @@ class DailyStudyService {
         final newTotal = currentTime + studyTime;
 
         transaction.set(docRef, {
-          FirebaseConstants.totalStudyTimeField: newTotal.inSeconds,
+          FirebaseConstants.totalStudyTimeField: newTotal.inMinutes,
           'date': today,
           'lastUpdated': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
@@ -223,6 +223,40 @@ class DailyStudyService {
     } on Exception catch (e) {
       e;
       return Duration.zero;
+    }
+  }
+
+  /// Get study time for the last week (7 days)
+  Future<int> getStudyStreakForLastWeek() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 0;
+
+      int streakDays = 0;
+      final now = DateTime.now();
+      const minimumStudyTime = Duration(minutes: 45);
+
+      // Get data for the last 7 days
+      for (int i = 0; i < 7; i++) {
+        final date = DateTime(now.year, now.month, now.day - i);
+        final dateString =
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+        final studyTime = await getStudyTimeForDate(dateString);
+
+        // Check if study time meets minimum requirement
+        if (studyTime >= minimumStudyTime) {
+          streakDays++;
+        } else {
+          // Break streak if a day is missed
+          break;
+        }
+      }
+
+      return streakDays;
+    } on Exception catch (e) {
+      e;
+      return 0;
     }
   }
 }

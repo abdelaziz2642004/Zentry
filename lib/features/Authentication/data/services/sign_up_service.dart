@@ -83,7 +83,7 @@ class SignupService {
   }
 
   /// Validate signup form data
-  String? validateSignupForm({
+  static String? validateSignupForm({
     required String email,
     required String username,
     required String password,
