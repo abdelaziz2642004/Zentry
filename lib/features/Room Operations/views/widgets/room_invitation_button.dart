@@ -94,7 +94,7 @@ class _RoomInvitationButtonState extends State<RoomInvitationButton> {
                                 friend['id'],
                               ),
                               builder: (context, snapshot) {
-                                String? imageUrl = snapshot.data;
+                                final String? imageUrl = snapshot.data;
 
                                 if (imageUrl != null && imageUrl.isNotEmpty) {
                                   return CircleAvatar(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:zentry_pomodoro_app/features/Friends/data/services/block_service.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
 
 class BlockedUserCard extends StatelessWidget {

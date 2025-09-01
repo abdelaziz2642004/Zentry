@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 
 class DialogStateManager {
   /// Manages user selection state

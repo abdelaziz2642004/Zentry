@@ -68,11 +68,11 @@ class _FriendCodeDisplayState extends State<FriendCodeDisplay> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(Icons.person_pin, color: mainColor),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   'Friend Code',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -110,7 +110,7 @@ class _FriendCodeDisplayState extends State<FriendCodeDisplay> {
                         ),
                         IconButton(
                           onPressed: _copyFriendCode,
-                          icon: Icon(Icons.copy, color: mainColor),
+                          icon: const Icon(Icons.copy, color: mainColor),
                           tooltip: 'Copy friend code',
                         ),
                       ],

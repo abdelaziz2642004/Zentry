@@ -183,12 +183,12 @@ class AddFriendDialogCubit extends Cubit<AddFriendDialogState> {
 
   /// Reset to initial state
   void reset() {
-    emit(AddFriendDialogInitial());
+    emit(const AddFriendDialogInitial());
   }
 
   /// Clear search results
   void clearSearch() {
-    emit(AddFriendDialogSearchResults(searchResults: [], selectedUserId: null));
+    emit(const AddFriendDialogSearchResults(searchResults: [], selectedUserId: null));
   }
 
   /// Get current search results

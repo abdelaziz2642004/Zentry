@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Friends/utils/chat_input_utils.dart';
-import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_input_cubit.dart';
-import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_input_states.dart';
 
 class ChatInputFriendRequest extends StatelessWidget {
   final String otherUserName;

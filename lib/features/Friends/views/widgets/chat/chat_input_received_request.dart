@@ -21,7 +21,7 @@ class ChatInputReceivedRequest extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final inputType = ChatInputType.receivedRequest;
+    const inputType = ChatInputType.receivedRequest;
     final backgroundColor = ChatInputUtils.getBackgroundColor(inputType, false);
     final borderColor = ChatInputUtils.getBorderColor(inputType, false);
     final iconColor = ChatInputUtils.getInputColor(inputType);

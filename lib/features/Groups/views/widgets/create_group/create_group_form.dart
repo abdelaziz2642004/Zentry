@@ -34,7 +34,7 @@ class _CreateGroupFormState extends State<CreateGroupForm> {
 
   String _selectedCategory = 'General';
   bool _isPublic = true;
-  List<String> _tags = [];
+  final List<String> _tags = [];
 
   @override
   void initState() {

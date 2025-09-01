@@ -171,9 +171,9 @@ class ViewProfileScreen extends StatelessWidget {
                     children: [
                       const Row(
                         children: [
-                          const Icon(Icons.qr_code, color: mainColor, size: 24),
-                          const SizedBox(width: 12),
-                          const Text(
+                          Icon(Icons.qr_code, color: mainColor, size: 24),
+                          SizedBox(width: 12),
+                          Text(
                             'Friend Code',
                             style: TextStyle(
                               fontSize: 18,
@@ -260,13 +260,13 @@ class ViewProfileScreen extends StatelessWidget {
                     children: [
                       const Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.info_outline,
                             color: mainColor,
                             size: 24,
                           ),
-                          const SizedBox(width: 12),
-                          const Text(
+                          SizedBox(width: 12),
+                          Text(
                             'About',
                             style: TextStyle(
                               fontSize: 18,

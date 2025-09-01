@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_cubit.dart';
-import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_states.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/block_service.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/friends_service.dart';
 import 'package:zentry_pomodoro_app/features/Friends/views/widgets/chat/chat_app_bar.dart';

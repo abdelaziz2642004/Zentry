@@ -27,7 +27,7 @@ class ConversationUserAvatar extends StatelessWidget {
     return StreamBuilder<String>(
       stream: UserService().getUserImageUrlStream(userId),
       builder: (context, snapshot) {
-        String? imageUrl = snapshot.data;
+        final String? imageUrl = snapshot.data;
 
         if (imageUrl != null && imageUrl.isNotEmpty) {
           return CircleAvatar(

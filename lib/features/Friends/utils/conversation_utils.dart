@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:zentry_pomodoro_app/features/Friends/data/services/user_service.dart';
 
 class ConversationUtils {
   /// Formats time difference for display

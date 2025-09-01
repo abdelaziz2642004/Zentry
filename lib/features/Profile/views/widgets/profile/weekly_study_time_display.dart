@@ -67,7 +67,7 @@ class _WeeklyStudyTimeDisplayState extends State<WeeklyStudyTimeDisplay> {
                   .get();
 
           if (doc.exists) {
-            final data = doc.data() as Map<String, dynamic>?;
+            final data = doc.data();
             final studyTimeSeconds =
                 data?[FirebaseConstants.totalStudyTimeField] ?? 0;
             final studyTime = Duration(seconds: studyTimeSeconds);
@@ -119,7 +119,7 @@ class _WeeklyStudyTimeDisplayState extends State<WeeklyStudyTimeDisplay> {
       if (minutes > 0) {
         return '${hours}h ${minutes}m';
       }
-      return '${hours} hours';
+      return '$hours hours';
     }
     return '${duration.inMinutes} minutes';
   }
@@ -136,7 +136,7 @@ class _WeeklyStudyTimeDisplayState extends State<WeeklyStudyTimeDisplay> {
           children: [
             Row(
               children: [
-                Icon(Icons.calendar_today, color: mainColor),
+                const Icon(Icons.calendar_today, color: mainColor),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
@@ -158,7 +158,7 @@ class _WeeklyStudyTimeDisplayState extends State<WeeklyStudyTimeDisplay> {
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
                   'Total: ${_formatTotalTime(_totalWeeklyTime)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: mainColor,

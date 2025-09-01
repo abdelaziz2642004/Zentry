@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/models/chat_message.dart';
-import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_input_cubit.dart';
-import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_input_states.dart';
 import 'package:zentry_pomodoro_app/core/colors.dart';
 
 class ChatInputNormal extends StatefulWidget {
@@ -90,7 +87,7 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
                       children: [
                         Text(
                           'Replying to ${widget.replyingTo!.senderName}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: mainColor,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

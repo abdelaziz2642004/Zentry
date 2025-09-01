@@ -264,7 +264,7 @@ class Joineduserspart extends StatelessWidget {
                 .get();
 
         if (doc.exists) {
-          final data = doc.data() as Map<String, dynamic>?;
+          final data = doc.data();
           final studyTimeSeconds =
               data?[FirebaseConstants.totalStudyTimeField] ?? 0;
           result[date] = Duration(seconds: studyTimeSeconds);

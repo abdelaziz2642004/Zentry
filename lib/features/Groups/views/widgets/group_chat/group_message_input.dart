@@ -91,7 +91,7 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
                       children: [
                         Text(
                           'Replying to ${widget.replyingTo!.senderName}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: mainColor,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

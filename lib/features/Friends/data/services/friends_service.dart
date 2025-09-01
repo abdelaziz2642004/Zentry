@@ -562,7 +562,7 @@ class FriendsService {
         await _firestore
             .collection(FirebaseConstants.userNamesCollection)
             .where(FieldPath.documentId, isGreaterThanOrEqualTo: query.trim())
-            .where(FieldPath.documentId, isLessThan: query.trim() + '\uf8ff')
+            .where(FieldPath.documentId, isLessThan: '${query.trim()}\uf8ff')
             .limit(10)
             .get();
 

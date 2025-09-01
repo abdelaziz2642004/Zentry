@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/models/chat_message.dart';
 import 'package:zentry_pomodoro_app/features/Friends/utils/message_bubble_utils.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';

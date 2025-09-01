@@ -53,7 +53,7 @@ class ChatMessagesEmpty extends StatelessWidget {
           const SizedBox(height: 16),
           Text(message, style: TextStyle(fontSize: 18, color: color)),
           const SizedBox(height: 8),
-          Text(subtitle, style: TextStyle(fontSize: 14, color: Colors.grey)),
+          Text(subtitle, style: const TextStyle(fontSize: 14, color: Colors.grey)),
         ],
       ),
     );

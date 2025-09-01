@@ -61,14 +61,14 @@ class ProfilePopupDialog extends StatelessWidget {
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
             return const Dialog(
-              child: const Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: const Column(
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.person_off, color: Colors.grey, size: 64),
-                    const SizedBox(height: 16),
-                    const Text(
+                    Icon(Icons.person_off, color: Colors.grey, size: 64),
+                    SizedBox(height: 16),
+                    Text(
                       'User not found',
                       style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
@@ -171,13 +171,13 @@ class ProfilePopupDialog extends StatelessWidget {
                       children: [
                         const Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.qr_code,
                               color: mainColor,
                               size: 20,
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
+                            SizedBox(width: 8),
+                            Text(
                               'Friend Code',
                               style: TextStyle(
                                 fontSize: 16,
@@ -413,7 +413,7 @@ class ProfilePopupDialog extends StatelessWidget {
                 .get();
 
         if (doc.exists) {
-          final data = doc.data() as Map<String, dynamic>?;
+          final data = doc.data();
           final studyTimeSeconds =
               data?[FirebaseConstants.totalStudyTimeField] ?? 0;
           result[date] = Duration(seconds: studyTimeSeconds);
