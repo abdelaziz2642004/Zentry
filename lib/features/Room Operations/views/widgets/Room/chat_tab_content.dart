@@ -16,8 +16,10 @@ class ChatTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<ChatCubit>(
-      create: (context) => ChatCubit(context.read<ChatCubit>().chatRepository),
+    return BlocProvider<RoomChatCubit>(
+      create:
+          (context) =>
+              RoomChatCubit(context.read<RoomChatCubit>().chatRepository),
       child:
           currentUser != null
               ? RoomChat(roomCode: roomCode, currentUser: currentUser!)

@@ -3,8 +3,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zentry_pomodoro_app/features/Authentication/data/models/user.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
+import 'package:zentry_pomodoro_app/features/Friends/data/services/online_status_service.dart';
 
 class AtStartService {
+  static final OnlineStatusService _onlineStatusService = OnlineStatusService();
+
   static Future<FireUser> fetchUserData() async {
     try {
       final User? currentUser = FirebaseAuth.instance.currentUser;
@@ -32,12 +35,23 @@ class AtStartService {
         await prefs.setString('SessionID', sessionID);
       }
 
+      final userData = fireUserDoc.data() as Map<String, dynamic>;
+
       return FireUser(
         notifications: [],
         id: fireUserId,
-        email: fireUserDoc[FirebaseConstants.emailField] ?? '',
-        imageUrl: fireUserDoc[FirebaseConstants.imageUrlField] ?? '',
-        fullName: fireUserDoc[FirebaseConstants.fullNameField] ?? '',
+        email: userData[FirebaseConstants.emailField] ?? '',
+        imageUrl: userData[FirebaseConstants.imageUrlField] ?? '',
+        fullName: userData[FirebaseConstants.fullNameField] ?? '',
+        timezone: userData[FirebaseConstants.timezoneField] ?? 'UTC',
+        timezoneOffset: userData[FirebaseConstants.timezoneOffsetField] ?? 0,
+        dailyStudyHours: Duration(
+          seconds: userData[FirebaseConstants.dailyStudyHoursField] ?? 0,
+        ),
+        lastStudyDate: userData[FirebaseConstants.lastStudyDateField] ?? '',
+        totalStudyTime: Duration(
+          seconds: userData[FirebaseConstants.totalStudyTimeField] ?? 0,
+        ),
       );
     } catch (e) {
       throw Exception("Error fetching FireUser: $e");

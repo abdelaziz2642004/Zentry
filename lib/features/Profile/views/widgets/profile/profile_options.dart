@@ -11,6 +11,14 @@ import 'package:zentry_pomodoro_app/core/constants/app_constants.dart';
 import 'package:zentry_pomodoro_app/core/constants/fonts.dart';
 import 'package:zentry_pomodoro_app/core/providers/user_provider.dart';
 import 'package:zentry_pomodoro_app/features/Profile/views/screens/settings_screen.dart';
+import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_cubit.dart';
+import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friends_list_cubit.dart';
+import 'package:zentry_pomodoro_app/features/Friends/viewmodels/friend_requests_cubit.dart';
+import 'package:zentry_pomodoro_app/features/Groups/viewmodels/groups_cubit.dart';
+import 'package:zentry_pomodoro_app/features/Groups/viewmodels/discovery_groups_cubit.dart';
+import 'package:zentry_pomodoro_app/features/Groups/viewmodels/my_groups_cubit.dart';
+import 'package:zentry_pomodoro_app/features/Groups/viewmodels/group_chat_cubit.dart';
+import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Profile/views/screens/streaks_achievements_screen.dart';
 
 class ProfileOptions extends StatelessWidget {
@@ -22,6 +30,9 @@ class ProfileOptions extends StatelessWidget {
     return BlocListener<AccountCubit, AccountStates>(
       listener: (context, state) {
         if (state is LogoutSuccess) {
+          // Clear all cubit states when logout is successful
+          _clearAllCubitStates(context);
+
           // The AppNavigator will automatically handle navigation to login screen
           // when Firebase Auth state changes, so we don't need to navigate manually
           ScaffoldMessenger.of(context).showSnackBar(
@@ -145,5 +156,28 @@ class ProfileOptions extends StatelessWidget {
             ],
           ),
     );
+  }
+
+  /// Clear all cubit states to prevent data persistence between users
+  void _clearAllCubitStates(BuildContext context) {
+    try {
+      // Clear Friends cubits
+      BlocProvider.of<FriendsCubit>(context).reset();
+      BlocProvider.of<FriendsListCubit>(context).reset();
+      BlocProvider.of<FriendRequestsCubit>(context).reset();
+
+      // Clear Groups cubits
+      BlocProvider.of<GroupsCubit>(context).reset();
+      BlocProvider.of<DiscoveryGroupsCubit>(context).reset();
+      BlocProvider.of<MyGroupsCubit>(context).reset();
+      BlocProvider.of<GroupChatCubit>(context).reset();
+
+      // Clear Chat cubit
+      BlocProvider.of<ChatCubit>(context).reset();
+
+      print('All cubit states cleared successfully');
+    } catch (e) {
+      print('Error clearing cubit states: $e');
+    }
   }
 }

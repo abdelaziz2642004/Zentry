@@ -12,13 +12,14 @@ class FirebaseConstants {
 
   // Firestore Field Names
   static const String usernameField = 'username';
-  static const String fullNameField = 'fullname';
+  static const String fullNameField = 'name';
   static const String emailField = 'email';
   static const String imageUrlField = 'imageUrl';
   static const String favoritedField = 'favorited';
   static const String notificationsField = 'notifications';
   static const String sessionIdField = 'SessionID';
   static const String idField = 'id';
+  static const String friendCodeField = 'friendCode';
 
   // Timezone and Daily Tracking Fields
   static const String timezoneField = 'timezone';

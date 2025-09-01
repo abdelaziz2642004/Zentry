@@ -6,6 +6,7 @@ import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/chat_s
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/chat/chat_header.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/chat/chat_input_field.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/chat/chat_message_bubble.dart';
+import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile_popup_dialog.dart';
 
 class RoomChat extends StatefulWidget {
   final String roomCode;
@@ -23,12 +24,13 @@ class RoomChat extends StatefulWidget {
 
 class _RoomChatState extends State<RoomChat> {
   final ScrollController _scrollController = ScrollController();
+  dynamic _replyingTo;
 
   @override
   void initState() {
     super.initState();
     // Start listening to chat messages
-    context.read<ChatCubit>().startListeningToChat(widget.roomCode);
+    context.read<RoomChatCubit>().startListeningToChat(widget.roomCode);
   }
 
   @override
@@ -62,7 +64,7 @@ class _RoomChatState extends State<RoomChat> {
 
           // Messages List
           Expanded(
-            child: BlocConsumer<ChatCubit, ChatStates>(
+            child: BlocConsumer<RoomChatCubit, ChatStates>(
               listener: (context, state) {
                 if (state is ChatMessagesLoaded) {
                   // Auto-scroll to bottom when new messages arrive
@@ -146,7 +148,27 @@ class _RoomChatState extends State<RoomChat> {
                         message: message,
                         isMyMessage: isMyMessage,
                         onDelete: () {
-                          context.read<ChatCubit>().deleteMessage(message.id);
+                          context.read<RoomChatCubit>().deleteMessage(
+                            message.id,
+                          );
+                        },
+                        onReact: (emoji) {
+                          context.read<RoomChatCubit>().toggleReaction(
+                            message.id,
+                            emoji,
+                          );
+                        },
+                        onReply: (replyToMessage) {
+                          setState(() {
+                            _replyingTo = replyToMessage;
+                          });
+                        },
+                        onViewProfile: (userId) {
+                          showDialog(
+                            context: context,
+                            builder:
+                                (context) => ProfilePopupDialog(userId: userId),
+                          );
                         },
                       );
                     },
@@ -160,11 +182,28 @@ class _RoomChatState extends State<RoomChat> {
 
           // Chat Input
           ChatInputField(
+            replyingTo: _replyingTo,
+            onReplyCleared: () {
+              setState(() {
+                _replyingTo = null;
+              });
+            },
             onSendMessage: (message) {
-              context.read<ChatCubit>().sendMessage(
-                message,
-                widget.currentUser,
-              );
+              if (_replyingTo != null) {
+                // Send reply message
+                context.read<RoomChatCubit>().sendReplyMessage(
+                  message: message,
+                  replyToMessageId: _replyingTo.id,
+                  replyToMessageContent: _replyingTo.message,
+                  replyToSenderName: _replyingTo.senderName ?? 'Unknown',
+                );
+              } else {
+                // Send normal message
+                context.read<RoomChatCubit>().sendMessage(
+                  message,
+                  widget.currentUser,
+                );
+              }
             },
           ),
         ],

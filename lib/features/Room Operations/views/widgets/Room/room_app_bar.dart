@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/Room_Cubit.dart';
+import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/room_invitation_button.dart';
 
 class RoomAppBar {
   static AppBar build(String roomCode, BuildContext context) {
     return AppBar(
-      title: const Text('Room'),
+      title: Text('Room $roomCode'),
       leading: IconButton(
         icon: const Icon(Icons.exit_to_app), // Custom "Leave Room" icon
         onPressed: () async {
           await leaveroom(context, roomCode);
         },
       ),
+      actions: [
+        RoomInvitationButton(roomCode: roomCode, roomName: 'Study Session'),
+      ],
     );
   }
 }

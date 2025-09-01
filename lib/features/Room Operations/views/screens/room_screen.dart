@@ -39,8 +39,8 @@ class _RoomScreenState extends State<RoomScreen> {
       },
       child: MultiBlocProvider(
         providers: [
-          BlocProvider<ChatCubit>(
-            create: (context) => ChatCubit(ChatRepository()),
+          BlocProvider<RoomChatCubit>(
+            create: (context) => RoomChatCubit(ChatRepository()),
           ),
         ],
         child: Scaffold(
