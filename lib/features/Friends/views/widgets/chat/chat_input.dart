@@ -76,7 +76,13 @@ class _ChatInputState extends State<ChatInput> {
           }
         } else if (state is ChatInputError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text(
+                state.error,
+                style: const TextStyle(color: Color(0xFFD9F5F0)),
+              ),
+              backgroundColor: const Color(0xFF072E33),
+            ),
           );
         }
       },
@@ -115,15 +121,27 @@ class _ChatInputState extends State<ChatInput> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
-          border: Border(top: BorderSide(color: Colors.grey[300]!)),
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF05161A).withOpacity(0.9),
+              const Color(0xFF072E33).withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border(
+            top: BorderSide(color: const Color(0xFF2CACAD).withOpacity(0.3)),
+          ),
         ),
         child: Row(
           children: [
             const SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2CACAD)),
+              ),
             ),
             const SizedBox(width: 12),
             Text(
@@ -134,7 +152,7 @@ class _ChatInputState extends State<ChatInput> {
                   : isRejectingFriendRequest
                   ? 'Rejecting friend request...'
                   : 'Updating...',
-              style: TextStyle(color: Colors.grey[600]),
+              style: const TextStyle(color: Color(0xFFD9F5F0)),
             ),
           ],
         ),
@@ -194,19 +212,51 @@ class _ChatInputState extends State<ChatInput> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Send Friend Request'),
-            content: Text('Send a friend request to ${widget.otherUserName}?'),
+            backgroundColor: const Color(0xFF05161A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: const Color(0xFF2CACAD).withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            title: const Text(
+              'Send Friend Request',
+              style: TextStyle(
+                color: Color(0xFFD9F5F0),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              'Send a friend request to ${widget.otherUserName}?',
+              style: TextStyle(color: const Color(0xFFD9F5F0).withOpacity(0.8)),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: const Color(0xFFD9F5F0).withOpacity(0.7),
+                  ),
+                ),
               ),
               ElevatedButton(
                 onPressed: () async {
                   Navigator.pop(context);
                   await _sendFriendRequest(context);
                 },
-                child: const Text('Send'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2CACAD),
+                  foregroundColor: const Color(0xFF05161A),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Send',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),

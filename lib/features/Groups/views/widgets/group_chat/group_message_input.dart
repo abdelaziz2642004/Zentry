@@ -54,13 +54,20 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF05161A).withOpacity(0.9),
+            const Color(0xFF072E33).withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: const Color(0xFF2CACAD).withOpacity(0.1),
             spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, -1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
@@ -71,8 +78,12 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
-                border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                color: const Color(0xFF2CACAD).withOpacity(0.1),
+                border: Border(
+                  bottom: BorderSide(
+                    color: const Color(0xFF2CACAD).withOpacity(0.3),
+                  ),
+                ),
               ),
               child: Row(
                 children: [
@@ -80,7 +91,7 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
                     width: 4,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: mainColor,
+                      color: const Color(0xFF2CACAD),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -92,7 +103,7 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
                         Text(
                           'Replying to ${widget.replyingTo!.senderName}',
                           style: const TextStyle(
-                            color: mainColor,
+                            color: Color(0xFF2CACAD),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -101,7 +112,7 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
                         Text(
                           widget.replyingTo!.message,
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: const Color(0xFFD9F5F0).withOpacity(0.8),
                             fontSize: 13,
                           ),
                           maxLines: 1,
@@ -112,7 +123,11 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
                   ),
                   IconButton(
                     onPressed: widget.onReplyCleared,
-                    icon: const Icon(Icons.close, size: 20),
+                    icon: Icon(
+                      Icons.close,
+                      size: 20,
+                      color: const Color(0xFFD9F5F0).withOpacity(0.7),
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -129,17 +144,21 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
+                    style: const TextStyle(color: Color(0xFFD9F5F0)),
                     decoration: InputDecoration(
                       hintText:
                           widget.replyingTo != null
                               ? 'Reply to message...'
                               : 'Type a message...',
+                      hintStyle: TextStyle(
+                        color: const Color(0xFFD9F5F0).withOpacity(0.6),
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Colors.grey[100],
+                      fillColor: const Color(0xFF2CACAD).withOpacity(0.1),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -157,8 +176,15 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
                         state is GroupChatLoadedState && state.isSending;
                     return Container(
                       decoration: BoxDecoration(
-                        color: mainColor,
+                        color: const Color(0xFF2CACAD),
                         borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2CACAD).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: IconButton(
                         onPressed: isLoading ? null : _sendMessage,
@@ -170,11 +196,14 @@ class _GroupMessageInputState extends State<GroupMessageInput> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
+                                      Color(0xFF05161A),
                                     ),
                                   ),
                                 )
-                                : const Icon(Icons.send, color: Colors.white),
+                                : const Icon(
+                                  Icons.send,
+                                  color: Color(0xFF05161A),
+                                ),
                       ),
                     );
                   },

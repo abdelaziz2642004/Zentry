@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Home/views/screens/create_room_bottom_sheet.dart';
-import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room/Helping%20Widgets/custom_button.dart';
 
 import 'package:zentry_pomodoro_app/features/Home/views/widgets/Home/custom_app_bar.dart';
 import 'package:zentry_pomodoro_app/features/Home/views/widgets/Home/custom_drawer.dart';
@@ -11,14 +10,9 @@ import 'package:zentry_pomodoro_app/features/Home/views/widgets/Home/rooms_grid_
 import 'package:zentry_pomodoro_app/features/Home/views/widgets/Home/daily_time_tracker.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/Room_Cubit.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/Room_States.dart';
-import 'package:zentry_pomodoro_app/core/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:zentry_pomodoro_app/core/providers/user_provider.dart';
-
-import 'package:zentry_pomodoro_app/core/functions.dart';
-import 'package:zentry_pomodoro_app/core/SnackBars/FailedSnackBar.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/views/screens/room_screen.dart';
-import 'package:zentry_pomodoro_app/features/Room%20Operations/data/models/pomodoro_room.dart';
 
 class Homescreen extends StatefulWidget {
   const Homescreen({super.key});
@@ -58,112 +52,10 @@ class _HomescreenState extends State<Homescreen> {
     }
   }
 
-  void _showJoinByCodeDialog(BuildContext context) {
-    final TextEditingController codeController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (BuildContext ctx) {
-        return AlertDialog(
-          title: const Text('Join Room by Code'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Enter the 6-digit room code:'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: codeController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: const InputDecoration(
-                  hintText: '123456',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final code = codeController.text.trim();
-
-                if (!isValidRoomCode(code)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    failedSnackBar(msg: 'Please enter a valid 6-digit code'),
-                  );
-                  return;
-                }
-
-                Navigator.of(context).pop();
-
-                // Show loading indicator
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Row(
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(width: 16),
-                        Text('Joining room...'),
-                      ],
-                    ),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-
-                try {
-                  final roomCubit = BlocProvider.of<RoomCubit>(context);
-
-                  // Check if already joining
-                  if (roomCubit.state is RoomJoinLoadingState) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      failedSnackBar(
-                        msg: 'Already joining a room. Please wait.',
-                      ),
-                    );
-                    return;
-                  }
-
-                  final navigator = Navigator.of(context);
-                  await roomCubit.joinRoom(code);
-
-                  // Navigate to room screen
-                  if (context.mounted) {
-                    navigator.push(
-                      MaterialPageRoute(
-                        builder:
-                            (_) => BlocProvider.value(
-                              value: roomCubit,
-                              child: RoomScreen(roomCode: code),
-                            ),
-                      ),
-                    );
-                  }
-                } on Exception catch (e) {
-                  e;
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      failedSnackBar(
-                        msg: 'Room not found, has finished, or was deleted',
-                      ),
-                    );
-                  }
-                }
-              },
-              child: const Text('Join'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    final roomCubit = BlocProvider.of<RoomCubit>(context);
     return Scaffold(
       drawer: const Customdrawer(),
       appBar: Customappbar.build(context),
@@ -199,24 +91,18 @@ class _HomescreenState extends State<Homescreen> {
                     ),
 
                     // Recently joined section with parallax effect
-                    SliverToBoxAdapter(child: _buildRecentlyJoinedSection()),
+                    SliverToBoxAdapter(
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        child: _buildRecentlyJoinedSection(),
+                      ),
+                    ),
 
                     // Quick stats with animated cards
                     SliverToBoxAdapter(
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 20),
                         child: _buildAnimatedQuickStats(),
-                      ),
-                    ),
-
-                    // Public rooms section with compact header
-                    SliverToBoxAdapter(
-                      child: Container(
-                        margin: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                        child: _buildCompactPublicRoomsHeader(
-                          context,
-                          roomCubit,
-                        ),
                       ),
                     ),
 
@@ -328,110 +214,7 @@ class _HomescreenState extends State<Homescreen> {
     );
   }
 
-  Widget _buildCompactPublicRoomsHeader(
-    BuildContext context,
-    RoomCubit roomCubit,
-  ) {
-    return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 1600),
-      tween: Tween(begin: 0.0, end: 1.0),
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 70 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: Row(
-              children: [
-                // Simple icon and title
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2CACAD).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF2CACAD).withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.public,
-                    color: Color(0xFF2CACAD),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
 
-                // Title
-                Expanded(
-                  child: Text(
-                    "Public Study Rooms",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFD9F5F0),
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-
-                // Join by code button - compact design
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF2CACAD), Color(0xFF0F9E9C)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF2CACAD).withOpacity(0.3),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => _showJoinByCodeDialog(context),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.qr_code,
-                              color: Color(0xFFD9F5F0),
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              "Join by Code",
-                              style: TextStyle(
-                                color: const Color(0xFFD9F5F0),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   Widget _buildAnimatedFAB() {
     return TweenAnimationBuilder<double>(

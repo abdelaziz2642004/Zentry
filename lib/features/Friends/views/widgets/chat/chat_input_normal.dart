@@ -57,8 +57,17 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[300]!)),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF05161A).withOpacity(0.9),
+            const Color(0xFF072E33).withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border(
+          top: BorderSide(color: const Color(0xFF2CACAD).withOpacity(0.3)),
+        ),
       ),
       child: Column(
         children: [
@@ -67,8 +76,12 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
-                border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                color: const Color(0xFF2CACAD).withOpacity(0.1),
+                border: Border(
+                  bottom: BorderSide(
+                    color: const Color(0xFF2CACAD).withOpacity(0.3),
+                  ),
+                ),
               ),
               child: Row(
                 children: [
@@ -76,7 +89,7 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
                     width: 4,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: mainColor,
+                      color: const Color(0xFF2CACAD),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -88,7 +101,7 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
                         Text(
                           'Replying to ${widget.replyingTo!.senderName}',
                           style: const TextStyle(
-                            color: mainColor,
+                            color: Color(0xFF2CACAD),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -97,7 +110,7 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
                         Text(
                           widget.replyingTo!.content,
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: const Color(0xFFD9F5F0).withOpacity(0.8),
                             fontSize: 13,
                           ),
                           maxLines: 1,
@@ -108,7 +121,11 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
                   ),
                   IconButton(
                     onPressed: widget.onClearReply,
-                    icon: const Icon(Icons.close, size: 20),
+                    icon: Icon(
+                      Icons.close,
+                      size: 20,
+                      color: const Color(0xFFD9F5F0).withOpacity(0.7),
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -126,12 +143,21 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
                   child: TextField(
                     controller: widget.messageController,
                     onSubmitted: (_) => _handleSubmitted(),
+                    style: const TextStyle(color: Color(0xFFD9F5F0)),
                     decoration: InputDecoration(
                       hintText:
                           widget.replyingTo != null
                               ? 'Reply to message...'
                               : 'Type a message...',
-                      border: InputBorder.none,
+                      hintStyle: TextStyle(
+                        color: const Color(0xFFD9F5F0).withOpacity(0.6),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFF2CACAD).withOpacity(0.1),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -147,9 +173,19 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
                   decoration: BoxDecoration(
                     color:
                         _isComposing && !widget.isSending
-                            ? mainColor
-                            : Colors.grey[300],
+                            ? const Color(0xFF2CACAD)
+                            : const Color(0xFF2CACAD).withOpacity(0.3),
                     shape: BoxShape.circle,
+                    boxShadow:
+                        _isComposing && !widget.isSending
+                            ? [
+                              BoxShadow(
+                                color: const Color(0xFF2CACAD).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                            : null,
                   ),
                   child: IconButton(
                     onPressed:
@@ -164,7 +200,7 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                                  Color(0xFF05161A),
                                 ),
                               ),
                             )
@@ -172,8 +208,10 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
                               Icons.send,
                               color:
                                   _isComposing && !widget.isSending
-                                      ? Colors.white
-                                      : Colors.grey[500],
+                                      ? const Color(0xFF05161A)
+                                      : const Color(
+                                        0xFFD9F5F0,
+                                      ).withOpacity(0.5),
                               size: 20,
                             ),
                   ),

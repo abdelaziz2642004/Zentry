@@ -53,8 +53,11 @@ class _FriendCardState extends State<FriendCard> {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${widget.friend.fullName} has been unblocked'),
-              backgroundColor: Colors.green,
+              content: Text(
+                '${widget.friend.fullName} has been unblocked',
+                style: const TextStyle(color: Color(0xFFD9F5F0)),
+              ),
+              backgroundColor: const Color(0xFF2CACAD),
             ),
           );
         }
@@ -66,8 +69,11 @@ class _FriendCardState extends State<FriendCard> {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${widget.friend.fullName} has been blocked'),
-              backgroundColor: Colors.red,
+              content: Text(
+                '${widget.friend.fullName} has been blocked',
+                style: const TextStyle(color: Color(0xFFD9F5F0)),
+              ),
+              backgroundColor: const Color(0xFF072E33),
             ),
           );
         }
@@ -79,8 +85,9 @@ class _FriendCardState extends State<FriendCard> {
           SnackBar(
             content: Text(
               'Error ${_isBlocked ? 'unblocking' : 'blocking'} user: $e',
+              style: const TextStyle(color: Color(0xFFD9F5F0)),
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFF072E33),
           ),
         );
       }
@@ -89,8 +96,31 @@ class _FriendCardState extends State<FriendCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF05161A).withOpacity(0.8),
+            const Color(0xFF072E33).withOpacity(0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF2CACAD).withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2CACAD).withOpacity(0.15),
+            blurRadius: 8,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(

@@ -67,6 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF05161A),
       appBar: ChatAppBar(
         otherUserId: widget.otherUserId,
         otherUserName: widget.otherUserName,
@@ -95,10 +96,27 @@ class _ChatScreenState extends State<ChatScreen> {
               ? Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  border: Border(top: BorderSide(color: Colors.grey[300]!)),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF05161A).withOpacity(0.9),
+                      const Color(0xFF072E33).withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border(
+                    top: BorderSide(
+                      color: const Color(0xFF2CACAD).withOpacity(0.3),
+                    ),
+                  ),
                 ),
-                child: const Center(child: CircularProgressIndicator()),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF2CACAD),
+                    ),
+                  ),
+                ),
               )
               : ChatInput(
                 otherUserId: widget.otherUserId,

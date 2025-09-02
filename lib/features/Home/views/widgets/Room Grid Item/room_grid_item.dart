@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zentry_pomodoro_app/features/Home/views/widgets/Create%20Room/Helping%20Widgets/custom_container.dart';
 
 import 'package:zentry_pomodoro_app/features/Home/views/widgets/Room%20Grid%20Item/Helping%20Widgets/control_badge.dart';
 import 'package:zentry_pomodoro_app/features/Home/views/widgets/Room%20Grid%20Item/Helping%20Widgets/creator_info.dart';
@@ -41,16 +40,33 @@ class RoomGridItem extends StatelessWidget {
 
         return Stack(
           children: [
-            CustomContainer(
-              color: Colors.white,
-              blurRadius: 4,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 10,
-                  right: 10,
-                  top: 18,
-                  bottom: 12,
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF05161A).withOpacity(0.8),
+                    const Color(0xFF072E33).withOpacity(0.7),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF2CACAD).withOpacity(0.3),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2CACAD).withOpacity(0.15),
+                    blurRadius: 4,
+                    spreadRadius: 0,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -75,14 +91,14 @@ class RoomGridItem extends StatelessWidget {
                     WorkBreakView(
                       time: workTime,
                       icon: Icons.work,
-                      iconColor: Colors.blueAccent,
+                      iconColor: const Color(0xFF2CACAD),
                       title: "Work Time: ",
                     ),
                     const SizedBox(height: 4),
                     WorkBreakView(
                       time: breakTime,
                       icon: Icons.coffee,
-                      iconColor: Colors.orange,
+                      iconColor: const Color(0xFF0F9E9C),
                       title: "Break Time: ",
                     ),
 

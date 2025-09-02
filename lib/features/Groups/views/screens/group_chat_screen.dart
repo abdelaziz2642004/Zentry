@@ -63,15 +63,26 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF05161A),
       appBar: GroupChatAppBar(
         group: widget.group,
         onShowGroupInfo: _showGroupInfo,
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[50],
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF05161A).withOpacity(0.9),
+              const Color(0xFF072E33).withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(
+            color: const Color(0xFF2CACAD).withOpacity(0.3),
+            width: 1,
+          ),
         ),
         child: Column(
           children: [

@@ -71,8 +71,11 @@ class _AddFriendDialogContentState extends State<_AddFriendDialogContent> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
+                content: Text(
+                  state.message,
+                  style: const TextStyle(color: Color(0xFFD9F5F0)),
+                ),
+                backgroundColor: const Color(0xFF2CACAD),
               ),
             );
             Navigator.of(context).pop();
@@ -80,29 +83,63 @@ class _AddFriendDialogContentState extends State<_AddFriendDialogContent> {
         } else if (state is AddFriendDialogError) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(
+                  state.error,
+                  style: const TextStyle(color: Color(0xFFD9F5F0)),
+                ),
+                backgroundColor: const Color(0xFF072E33),
+              ),
             );
           });
         }
 
         return AlertDialog(
-          title: const Text('Add Friend'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FriendSearchField(
-                  controller: _searchController,
-                  isLoading: state is AddFriendDialogSearching,
-                  onSearchChanged: _onSearchChanged,
-                ),
-                const SizedBox(height: 16),
-                Flexible(child: _buildSearchResults(state)),
-                _buildMessageInput(state),
-                const SizedBox(height: 20),
-                _buildActionButtons(state),
-              ],
+          backgroundColor: const Color(0xFF05161A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: const Color(0xFF2CACAD).withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          title: Text(
+            'Add Friend',
+            style: TextStyle(
+              color: const Color(0xFFD9F5F0),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF05161A).withOpacity(0.9),
+                  const Color(0xFF072E33).withOpacity(0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FriendSearchField(
+                    controller: _searchController,
+                    isLoading: state is AddFriendDialogSearching,
+                    onSearchChanged: _onSearchChanged,
+                  ),
+                  const SizedBox(height: 16),
+                  Flexible(child: _buildSearchResults(state)),
+                  _buildMessageInput(state),
+                  const SizedBox(height: 20),
+                  _buildActionButtons(state),
+                ],
+              ),
             ),
           ),
         );

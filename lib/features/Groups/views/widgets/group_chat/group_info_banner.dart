@@ -11,11 +11,27 @@ class GroupInfoBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
-      color: Colors.grey[50],
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF2CACAD).withOpacity(0.1),
+            const Color(0xFF0F9E9C).withOpacity(0.08),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: const Color(0xFF2CACAD).withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+      ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 20,
+            backgroundColor: const Color(0xFF2CACAD).withOpacity(0.2),
             backgroundImage:
                 group.imageUrl.isNotEmpty ? NetworkImage(group.imageUrl) : null,
             child:
@@ -25,6 +41,7 @@ class GroupInfoBanner extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF2CACAD),
                       ),
                     )
                     : null,
@@ -39,11 +56,15 @@ class GroupInfoBanner extends StatelessWidget {
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
+                    color: Color(0xFFD9F5F0),
                   ),
                 ),
                 Text(
                   group.description,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(
+                    color: const Color(0xFFD9F5F0).withOpacity(0.7),
+                    fontSize: 12,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

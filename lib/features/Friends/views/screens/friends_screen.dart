@@ -47,6 +47,7 @@ class _FriendsScreenState extends State<FriendsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF05161A),
       appBar: FriendsAppBar(
         onRefresh: _refreshFriendsList,
         onAddFriend: _showAddFriendDialog,
@@ -55,13 +56,35 @@ class _FriendsScreenState extends State<FriendsScreen>
         children: [
           Container(
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF05161A).withOpacity(0.9),
+                  const Color(0xFF072E33).withOpacity(0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: const Color(0xFF2CACAD).withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
             ),
             child: TabBar(
               controller: _tabController,
-              labelColor: mainColor,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: mainColor,
+              labelColor: const Color(0xFF2CACAD),
+              unselectedLabelColor: const Color(0xFFD9F5F0).withOpacity(0.6),
+              indicatorColor: const Color(0xFF2CACAD),
+              indicatorWeight: 3,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w400,
+                fontSize: 14,
+              ),
               tabs: const [Tab(text: 'Friends'), Tab(text: 'Requests')],
             ),
           ),
@@ -136,7 +159,13 @@ class _FriendsScreenState extends State<FriendsScreen>
     if (state is FriendsErrorState) {
       print('Error: ${state.error}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(
+            state.error,
+            style: const TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF072E33),
+        ),
       );
     }
   }
@@ -150,20 +179,32 @@ class _FriendsScreenState extends State<FriendsScreen>
     if (state is FriendsErrorState) {
       print('Error: ${state.error}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(
+            state.error,
+            style: const TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF072E33),
+        ),
       );
     } else if (state is FriendRequestSentState) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Friend request sent!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text(
+            'Friend request sent!',
+            style: TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF2CACAD),
         ),
       );
     } else if (state is FriendRequestAcceptedState) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Friend request accepted!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text(
+            'Friend request accepted!',
+            style: TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF2CACAD),
         ),
       );
       if (!_disposed) {
@@ -171,9 +212,12 @@ class _FriendsScreenState extends State<FriendsScreen>
       }
     } else if (state is FriendRequestRejectedState) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Friend request rejected'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text(
+            'Friend request rejected',
+            style: TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF0F9E9C),
         ),
       );
     }
@@ -188,13 +232,22 @@ class _FriendsScreenState extends State<FriendsScreen>
     if (state is FriendsErrorState) {
       print('Error: ${state.error}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(
+            state.error,
+            style: const TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF072E33),
+        ),
       );
     } else if (state is FriendRemovedState) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Friend removed'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text(
+            'Friend removed',
+            style: TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF0F9E9C),
         ),
       );
     }

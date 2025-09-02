@@ -49,6 +49,7 @@ class _GroupsScreenState extends State<GroupsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF05161A),
       appBar: GroupsAppBar(
         onCreateGroup: _showCreateGroupDialog,
         tabController: _tabController,
@@ -102,13 +103,22 @@ class _GroupsScreenState extends State<GroupsScreen>
   void _handleGroupsStateChanges(BuildContext context, GroupsState state) {
     if (state is GroupsErrorState) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(
+            state.error,
+            style: const TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF072E33),
+        ),
       );
     } else if (state is GroupCreatedState) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Group created successfully!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text(
+            'Group created successfully!',
+            style: TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF2CACAD),
         ),
       );
       // Reload both tabs after creating a group
@@ -120,20 +130,32 @@ class _GroupsScreenState extends State<GroupsScreen>
   void _handleMyGroupsStateChanges(BuildContext context, GroupsState state) {
     if (state is GroupsErrorState) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(
+            state.error,
+            style: const TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF072E33),
+        ),
       );
     } else if (state is GroupJoinedState) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Joined group successfully!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text(
+            'Joined group successfully!',
+            style: TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF2CACAD),
         ),
       );
     } else if (state is GroupLeftState) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Left group successfully'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text(
+            'Left group successfully',
+            style: TextStyle(color: Color(0xFFD9F5F0)),
+          ),
+          backgroundColor: const Color(0xFF0F9E9C),
         ),
       );
     }
