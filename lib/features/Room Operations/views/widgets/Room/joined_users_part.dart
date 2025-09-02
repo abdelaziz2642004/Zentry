@@ -16,280 +16,356 @@ class Joineduserspart extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<RoomCubit, RoomStates>(
       buildWhen: (previous, current) {
-        return current is RoomJoinSuccess ||
-            current is RoomJoinFailure ||
-            current is RoomJoinLoadingState ||
-            current is RoomUsersUpdated;
+        return current is RoomJoinSuccess || current is RoomUsersUpdated;
       },
       builder: (context, state) {
-        if (state is RoomJoinLoadingState) {
-          return const CircularProgressIndicator();
-        } else if (state is RoomJoinSuccess || state is RoomUsersUpdated) {
+        if (state is RoomJoinSuccess || state is RoomUsersUpdated) {
           final roomDetails = (state as dynamic).room;
-          final userIds = roomDetails.joinedUsers;
+          final joinedUsers = roomDetails.joinedUsers ?? [];
 
-          if (userIds.isEmpty) {
-            return const Text("No users in this room.");
-          }
+          // Add 24 fake users for demonstration
+          final List<String> fakeUserIds = List.generate(
+            24,
+            (index) => 'fake_user_$index',
+          );
+          final allUsers = [...joinedUsers, ...fakeUserIds];
 
-          // Helper to split list into chunks of 10
-          List<List<String>> chunked(List<String> list, int size) {
-            final List<List<String>> chunks = [];
-            for (var i = 0; i < list.length; i += size) {
-              chunks.add(
-                list.sublist(
-                  i,
-                  i + size > list.length ? list.length : i + size,
+          return Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF05161A).withOpacity(0.9),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF2CACAD).withOpacity(0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2CACAD).withOpacity(0.1),
+                  blurRadius: 20,
+                  spreadRadius: 2,
                 ),
-              );
-            }
-            return chunks;
-          }
-
-          final userIdChunks = chunked(userIds, 10);
-          final streams =
-              userIdChunks
-                  .map(
-                    (chunk) =>
-                        FirebaseFirestore.instance
-                            .collection(FirebaseConstants.usersCollection)
-                            .where(FieldPath.documentId, whereIn: chunk)
-                            .snapshots(),
-                  )
-                  .toList();
-
-          return StreamBuilder<List<QuerySnapshot>>(
-            stream: StreamZip(streams),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Text('Error: \\${snapshot.error}');
-              }
-              if (!snapshot.hasData) {
-                return const CircularProgressIndicator();
-              }
-              // Merge all docs from all snapshots
-              final allDocs = snapshot.data!.expand((qs) => qs.docs).toList();
-              if (allDocs.isEmpty) {
-                return const Text("No users found.");
-              }
-              // Map userIds to user documents for correct order
-              final userMap = {for (var doc in allDocs) doc.id: doc};
-              return Column(
-                children:
-                    userIds.map<Widget>((userId) {
-                      final userDoc = userMap[userId];
-                      if (userDoc == null || !userDoc.exists) {
-                        return const ListTile(title: Text("User not found"));
-                      }
-                      final userData = userDoc.data() as Map<String, dynamic>;
-
-                      final userName =
-                          userData[FirebaseConstants.fullNameField] ??
-                          'Unknown User';
-                      // print(userName);
-                      final userImage =
-                          userData[FirebaseConstants.imageUrlField] ?? '';
-                      return ListTile(
-                        leading:
-                            userImage.isNotEmpty
-                                ? CircleAvatar(
-                                  backgroundImage: NetworkImage(userImage),
-                                )
-                                : const CircleAvatar(child: Icon(Icons.person)),
-                        title: Text(userName),
-                        trailing: const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: Colors.grey,
+              ],
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              child:
+                  allUsers.isEmpty
+                      ? Container(
+                        height: 200,
+                        padding: const EdgeInsets.all(32.0),
+                        child: const Center(
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.people_outline,
+                                color: Color(0xFF6DA5C0),
+                                size: 48,
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'No users in room yet',
+                                style: TextStyle(
+                                  color: Color(0xFF6DA5C0),
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Be the first to join!',
+                                style: TextStyle(
+                                  color: Color(0xFF6DA5C0),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        onTap:
-                            () => _showUserProfilePopup(
-                              context,
-                              userId,
-                              userName,
-                              userImage,
+                      )
+                      : GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 6, // 6 columns like in the image
+                              childAspectRatio:
+                                  1.0, // Perfect square for circles
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 16,
                             ),
-                      );
-                    }).toList(),
-              );
-            },
+                        itemCount: allUsers.length,
+                        itemBuilder: (context, index) {
+                          final userId = allUsers[index];
+                          final isFakeUser = userId.startsWith('fake_user_');
+
+                          if (isFakeUser) {
+                            // Fake user with generated avatar and alternating colors
+                            final borderColor =
+                                index % 2 == 0
+                                    ? const Color(0xFF2CACAD) // Bright blue
+                                    : const Color(0xFF0F9E9C); // Bright orange
+
+                            // Generate different fake avatars
+                            final avatarType = index % 4; // 4 different types
+                            Widget avatarContent;
+
+                            switch (avatarType) {
+                              case 0:
+                                // Colored circle with letter
+                                avatarContent = Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF75E2E0),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      String.fromCharCode(
+                                        65 + (index % 26),
+                                      ), // A, B, C, etc.
+                                      style: const TextStyle(
+                                        color: Color(0xFF05161A),
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                                break;
+                              case 1:
+                                // Gradient circle
+                                avatarContent = Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF2CACAD),
+                                        Color(0xFF0F9E9C),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
+                                );
+                                break;
+                              case 2:
+                                // Pattern circle
+                                avatarContent = Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF6DA5C0),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.star,
+                                    color: Color(0xFF05161A),
+                                    size: 30,
+                                  ),
+                                );
+                                break;
+                              default:
+                                // Icon circle
+                                avatarContent = Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0C7075),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.favorite,
+                                    color: Color(0xFFD9F5F0),
+                                    size: 30,
+                                  ),
+                                );
+                                break;
+                            }
+
+                            return Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: borderColor,
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: borderColor.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(child: avatarContent),
+                            );
+                          } else {
+                            // Real user from StreamBuilder
+                            return StreamBuilder<DocumentSnapshot>(
+                              stream:
+                                  FirebaseFirestore.instance
+                                      .collection(
+                                        FirebaseConstants.usersCollection,
+                                      )
+                                      .doc(userId)
+                                      .snapshots(),
+                              builder: (context, userSnapshot) {
+                                if (userSnapshot.hasData &&
+                                    userSnapshot.data!.exists) {
+                                  final userData =
+                                      userSnapshot.data!.data()
+                                          as Map<String, dynamic>;
+                                  final userName =
+                                      userData[FirebaseConstants
+                                          .fullNameField] ??
+                                      'Unknown User';
+                                  final userImage =
+                                      userData[FirebaseConstants
+                                          .imageUrlField] ??
+                                      '';
+
+                                  // Alternating border colors like in the image
+                                  final borderColor =
+                                      index % 2 == 0
+                                          ? const Color(
+                                            0xFF2CACAD,
+                                          ) // Bright blue
+                                          : const Color(
+                                            0xFF0F9E9C,
+                                          ); // Bright orange
+
+                                  return GestureDetector(
+                                    onTap:
+                                        () => _showUserProfile(
+                                          context,
+                                          userId,
+                                          userName,
+                                        ),
+                                    child: Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: borderColor,
+                                          width: 3,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: borderColor.withOpacity(0.3),
+                                            blurRadius: 8,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                      child: ClipOval(
+                                        child:
+                                            userImage.isNotEmpty
+                                                ? Image.network(
+                                                  userImage,
+                                                  fit: BoxFit.cover,
+                                                  width: 60,
+                                                  height: 60,
+                                                  errorBuilder: (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) {
+                                                    return Container(
+                                                      width: 60,
+                                                      height: 60,
+                                                      color: const Color(
+                                                        0xFF072E33,
+                                                      ),
+                                                      child: Icon(
+                                                        Icons.person,
+                                                        color: const Color(
+                                                          0xFF6DA5C0,
+                                                        ),
+                                                        size: 30,
+                                                      ),
+                                                    );
+                                                  },
+                                                )
+                                                : Container(
+                                                  width: 60,
+                                                  height: 60,
+                                                  color: const Color(
+                                                    0xFF072E33,
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.person,
+                                                    color: const Color(
+                                                      0xFF6DA5C0,
+                                                    ),
+                                                    size: 30,
+                                                  ),
+                                                ),
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  // Loading state for user data
+                                  final borderColor =
+                                      index % 2 == 0
+                                          ? const Color(0xFF2CACAD)
+                                          : const Color(0xFF0F9E9C);
+
+                                  return Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: borderColor,
+                                        width: 3,
+                                      ),
+                                    ),
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Color(0xFF75E2E0),
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            );
+                          }
+                        },
+                      ),
+            ),
           );
         }
+
         return const SizedBox.shrink();
       },
     );
   }
 
-  void _showUserProfilePopup(
-    BuildContext context,
-    String userId,
-    String userName,
-    String userImage,
-  ) {
+  void _showUserProfile(BuildContext context, String userId, String userName) {
     showDialog(
       context: context,
-      builder: (BuildContext context) => ProfilePopupDialog(userId: userId),
+      builder:
+          (BuildContext dialogContext) =>
+              ProfilePopupDialog(userId: userId, userName: userName),
     );
-  }
-
-  Widget _buildWeeklyStudyTime(String userId) {
-    // Get current week's dates (Saturday to Friday)
-    final now = DateTime.now();
-    final currentWeekday = now.weekday; // 1 = Monday, 7 = Sunday
-
-    // Calculate Saturday of current week (weekday 6)
-    final saturday = now.subtract(Duration(days: currentWeekday - 6));
-
-    return FutureBuilder<Map<DateTime, Duration>>(
-      future: _getWeeklyStudyData(userId, saturday),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Text(
-            'Error loading study data',
-            style: TextStyle(color: Colors.red),
-          );
-        }
-
-        if (!snapshot.hasData) {
-          return const SizedBox(
-            height: 60,
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          );
-        }
-
-        final studyData = snapshot.data!;
-
-        return Column(
-          children: [
-            // Days of the week
-            Row(
-              children:
-                  ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day) {
-                    final isToday = _isToday(day, now);
-                    return Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          day,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight:
-                                isToday ? FontWeight.bold : FontWeight.normal,
-                            color: isToday ? Colors.blue : Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-            ),
-            const SizedBox(height: 4),
-
-            // Study time bars
-            Row(
-              children: List.generate(7, (index) {
-                final date = saturday.add(Duration(days: index));
-                final studyTime = studyData[date] ?? Duration.zero;
-                final isToday = _isToday(
-                  ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'][index],
-                  now,
-                );
-                final isFuture = date.isAfter(now);
-
-                return Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 1),
-                    child: Column(
-                      children: [
-                        // Study time bar
-                        Container(
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color:
-                                isFuture
-                                    ? Colors.grey[300]
-                                    : studyTime.inMinutes > 0
-                                    ? Colors.green[400]
-                                    : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(4),
-                            border:
-                                isToday
-                                    ? Border.all(color: Colors.blue, width: 2)
-                                    : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              _formatStudyTime(studyTime),
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w500,
-                                color:
-                                    isFuture || studyTime.inMinutes == 0
-                                        ? Colors.grey[600]
-                                        : Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<Map<DateTime, Duration>> _getWeeklyStudyData(
-    String userId,
-    DateTime saturday,
-  ) async {
-    final Map<DateTime, Duration> result = {};
-
-    for (int i = 0; i < 7; i++) {
-      final date = saturday.add(Duration(days: i));
-      final dateString =
-          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-      try {
-        final doc =
-            await FirebaseFirestore.instance
-                .collection(FirebaseConstants.dailyStatsCollection)
-                .doc(userId)
-                .collection('dates')
-                .doc(dateString)
-                .get();
-
-        if (doc.exists) {
-          final data = doc.data();
-          final studyTimeSeconds =
-              data?[FirebaseConstants.totalStudyTimeField] ?? 0;
-          result[date] = Duration(seconds: studyTimeSeconds);
-        } else {
-          result[date] = Duration.zero;
-        }
-      } catch (e) {
-        result[date] = Duration.zero;
-      }
-    }
-
-    return result;
-  }
-
-  bool _isToday(String day, DateTime now) {
-    final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final currentDay = weekdays[now.weekday - 1];
-    return day == currentDay;
-  }
-
-  String _formatStudyTime(Duration duration) {
-    if (duration.inMinutes == 0) return '0';
-    if (duration.inHours > 0) {
-      return '${duration.inHours}h';
-    }
-    return '${duration.inMinutes}m';
   }
 }

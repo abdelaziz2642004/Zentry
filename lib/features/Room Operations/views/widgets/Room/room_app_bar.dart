@@ -6,15 +6,63 @@ import 'package:zentry_pomodoro_app/features/Room%20Operations/views/widgets/roo
 class RoomAppBar {
   static AppBar build(String roomCode, BuildContext context) {
     return AppBar(
-      title: Text('Room $roomCode'),
-      leading: IconButton(
-        icon: const Icon(Icons.exit_to_app), // Custom "Leave Room" icon
-        onPressed: () async {
-          await leaveroom(context, roomCode);
-        },
+      backgroundColor: const Color(0xFF05161A),
+      foregroundColor: const Color(0xFFD9F5F0),
+      elevation: 0,
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2CACAD).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.room, color: Color(0xFF75E2E0), size: 24),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Room $roomCode',
+            style: const TextStyle(
+              color: Color(0xFFD9F5F0),
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+        ],
+      ),
+      leading: Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0C7075).withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFF0C7075).withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.exit_to_app, color: Color(0xFF75E2E0)),
+          onPressed: () async {
+            await leaveroom(context, roomCode);
+          },
+        ),
       ),
       actions: [
-        RoomInvitationButton(roomCode: roomCode, roomName: 'Study Session'),
+        Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2CACAD).withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFF2CACAD).withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: RoomInvitationButton(
+            roomCode: roomCode,
+            roomName: 'Study Session',
+          ),
+        ),
       ],
     );
   }
@@ -29,20 +77,40 @@ Future<bool> leaveroom(BuildContext context, String roomCode) async {
     context: currentContext,
     builder:
         (_) => AlertDialog(
-          title: const Text("Leave Room"),
-          content: const Text("Are you sure you want to leave the room?"),
+          backgroundColor: const Color(0xFF05161A),
+          title: const Text(
+            "Leave Room",
+            style: TextStyle(
+              color: Color(0xFFD9F5F0),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            "Are you sure you want to leave the room?",
+            style: TextStyle(color: Color(0xFF75E2E0)),
+          ),
           actions: [
             TextButton(
-              onPressed:
-                  () =>
-                      Navigator.pop(currentContext, false), // Stay in the room
-              child: const Text("Cancel"),
+              onPressed: () => Navigator.pop(currentContext, false),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Color(0xFF6DA5C0)),
+              ),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(currentContext, true); // Confirm leaving
+                Navigator.pop(currentContext, true);
               },
-              child: const Text("Leave"),
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFF0C7075).withOpacity(0.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                "Leave",
+                style: TextStyle(color: Color(0xFFD9F5F0)),
+              ),
             ),
           ],
         ),

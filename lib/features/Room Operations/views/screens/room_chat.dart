@@ -51,163 +51,179 @@ class _RoomChatState extends State<RoomChat> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Column(
-        children: [
-          // Chat Header
-          const ChatHeader(),
+    return Column(
+      children: [
+        // Chat Header
+        // Container(
+        //   decoration: BoxDecoration(
+        //     color: const Color(0xFF2CACAD).withOpacity(0.1),
+        //     borderRadius: const BorderRadius.only(
+        //       topLeft: Radius.circular(20),
+        //       topRight: Radius.circular(20),
+        //     ),
+        //   ),
+        //   child: const ChatHeader(),
+        // ),
 
-          // Messages List
-          Expanded(
-            child: BlocConsumer<RoomChatCubit, ChatStates>(
-              listener: (context, state) {
-                if (state is ChatMessagesLoaded) {
-                  // Auto-scroll to bottom when new messages arrive
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _scrollToBottom();
-                  });
-                }
-              },
-              builder: (context, state) {
-                if (state is ChatLoadingState) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is ChatErrorState) {
+        // Messages List
+        Expanded(
+          child: BlocConsumer<RoomChatCubit, ChatStates>(
+            listener: (context, state) {
+              if (state is ChatMessagesLoaded) {
+                // Auto-scroll to bottom when new messages arrive
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _scrollToBottom();
+                });
+              }
+            },
+            builder: (context, state) {
+              if (state is ChatLoadingState) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF75E2E0),
+                    ),
+                  ),
+                );
+              } else if (state is ChatErrorState) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Color(0xFF0C7075),
+                        size: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Error loading messages',
+                        style: TextStyle(
+                          color: Color(0xFFD9F5F0),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        state.error,
+                        style: const TextStyle(
+                          color: Color(0xFF75E2E0),
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                );
+              } else if (state is ChatMessagesLoaded) {
+                if (state.messages.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Colors.red,
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          color: const Color(0xFF0C7075).withOpacity(0.5),
                           size: 48,
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Error loading messages',
-                          style: TextStyle(color: Colors.red),
+                          'No messages yet',
+                          style: const TextStyle(
+                            color: const Color(0xFFD9F5F0),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          state.error,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
+                        const Text(
+                          'Start the conversation!',
+                          style: const TextStyle(
+                            color: const Color(0xFF75E2E0),
+                            fontSize: 14,
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
                   );
-                } else if (state is ChatMessagesLoaded) {
-                  if (state.messages.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline,
-                            color: Colors.grey[400],
-                            size: 48,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No messages yet',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Start the conversation!',
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(12),
-                    itemCount: state.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = state.messages[index];
-                      final isMyMessage =
-                          message.senderId == widget.currentUser.id;
-
-                      return ChatMessageBubble(
-                        message: message,
-                        isMyMessage: isMyMessage,
-                        onDelete: () {
-                          context.read<RoomChatCubit>().deleteMessage(
-                            message.id,
-                          );
-                        },
-                        onReact: (emoji) {
-                          context.read<RoomChatCubit>().toggleReaction(
-                            message.id,
-                            emoji,
-                          );
-                        },
-                        onReply: (replyToMessage) {
-                          setState(() {
-                            _replyingTo = replyToMessage;
-                          });
-                        },
-                        onViewProfile: (userId) {
-                          showDialog(
-                            context: context,
-                            builder:
-                                (context) => ProfilePopupDialog(userId: userId),
-                          );
-                        },
-                      );
-                    },
-                  );
                 }
 
-                return const Center(child: Text('No messages'));
-              },
-            ),
-          ),
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(12),
+                  itemCount: state.messages.length,
+                  itemBuilder: (context, index) {
+                    final message = state.messages[index];
+                    final isMyMessage =
+                        message.senderId == widget.currentUser.id;
 
-          // Chat Input
-          ChatInputField(
-            replyingTo: _replyingTo,
-            onReplyCleared: () {
-              setState(() {
-                _replyingTo = null;
-              });
-            },
-            onSendMessage: (message) {
-              if (_replyingTo != null) {
-                // Send reply message
-                context.read<RoomChatCubit>().sendReplyMessage(
-                  message: message,
-                  replyToMessageId: _replyingTo.id,
-                  replyToMessageContent: _replyingTo.message,
-                  replyToSenderName: _replyingTo.senderName ?? 'Unknown',
-                );
-              } else {
-                // Send normal message
-                context.read<RoomChatCubit>().sendMessage(
-                  message,
-                  widget.currentUser,
+                    return ChatMessageBubble(
+                      message: message,
+                      isMyMessage: isMyMessage,
+                      onDelete: () {
+                        context.read<RoomChatCubit>().deleteMessage(message.id);
+                      },
+                      onReact: (emoji) {
+                        context.read<RoomChatCubit>().toggleReaction(
+                          message.id,
+                          emoji,
+                        );
+                      },
+                      onReply: (replyToMessage) {
+                        setState(() {
+                          _replyingTo = replyToMessage;
+                        });
+                      },
+                      onViewProfile: (userId) {
+                        showDialog(
+                          context: context,
+                          builder:
+                              (context) => ProfilePopupDialog(userId: userId),
+                        );
+                      },
+                    );
+                  },
                 );
               }
+
+              return const Center(
+                child: Text(
+                  'No messages',
+                  style: TextStyle(color: Color(0xFFD9F5F0)),
+                ),
+              );
             },
           ),
-        ],
-      ),
+        ),
+
+        // Chat Input
+        ChatInputField(
+          replyingTo: _replyingTo,
+          onReplyCleared: () {
+            setState(() {
+              _replyingTo = null;
+            });
+          },
+          onSendMessage: (message) {
+            if (_replyingTo != null) {
+              // Send reply message
+              context.read<RoomChatCubit>().sendReplyMessage(
+                message: message,
+                replyToMessageId: _replyingTo.id,
+                replyToMessageContent: _replyingTo.message,
+                replyToSenderName: _replyingTo.senderName ?? 'Unknown',
+              );
+            } else {
+              // Send normal message
+              context.read<RoomChatCubit>().sendMessage(
+                message,
+                widget.currentUser,
+              );
+            }
+          },
+        ),
+      ],
     );
   }
 }

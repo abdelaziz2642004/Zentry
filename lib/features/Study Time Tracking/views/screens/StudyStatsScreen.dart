@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Study%20Time%20Tracking/viewmodels/study_tracking_cubit.dart';
 import 'package:zentry_pomodoro_app/features/Study%20Time%20Tracking/viewmodels/study_tracking_states.dart';
 import 'package:zentry_pomodoro_app/core/utils/timezone_utils.dart';
+import 'package:zentry_pomodoro_app/features/Study%20Time%20Tracking/views/screens/leaderboard_screen.dart';
 
 class StudyStatsScreen extends StatefulWidget {
   const StudyStatsScreen({super.key});
@@ -149,6 +150,29 @@ class _StudyStatsScreenState extends State<StudyStatsScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LeaderboardScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.leaderboard),
+                          label: const Text('Leaderboard'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () async {

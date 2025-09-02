@@ -68,9 +68,9 @@ class _WeeklyStudyTimeDisplayState extends State<WeeklyStudyTimeDisplay> {
 
           if (doc.exists) {
             final data = doc.data();
-            final studyTimeSeconds =
+            final studyTimeMinutes =
                 data?[FirebaseConstants.totalStudyTimeField] ?? 0;
-            final studyTime = Duration(seconds: studyTimeSeconds);
+            final studyTime = Duration(minutes: studyTimeMinutes);
             result[date] = studyTime;
             totalTime += studyTime;
           } else {

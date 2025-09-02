@@ -171,11 +171,7 @@ class ProfilePopupDialog extends StatelessWidget {
                       children: [
                         const Row(
                           children: [
-                            Icon(
-                              Icons.qr_code,
-                              color: mainColor,
-                              size: 20,
-                            ),
+                            Icon(Icons.qr_code, color: mainColor, size: 20),
                             SizedBox(width: 8),
                             Text(
                               'Friend Code',
@@ -414,9 +410,9 @@ class ProfilePopupDialog extends StatelessWidget {
 
         if (doc.exists) {
           final data = doc.data();
-          final studyTimeSeconds =
+          final studyTimeMinutes =
               data?[FirebaseConstants.totalStudyTimeField] ?? 0;
-          result[date] = Duration(seconds: studyTimeSeconds);
+          result[date] = Duration(minutes: studyTimeMinutes);
         } else {
           result[date] = Duration.zero;
         }

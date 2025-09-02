@@ -18,11 +18,13 @@ class ChatInputField extends StatefulWidget {
 
 class _ChatInputFieldState extends State<ChatInputField> {
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   bool _isComposing = false;
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -30,6 +32,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
     if (text.trim().isNotEmpty) {
       widget.onSendMessage(text);
       _controller.clear();
+      _focusNode.unfocus(); // Clear focus to close keyboard
       setState(() {
         _isComposing = false;
       });
@@ -125,6 +128,8 @@ class _ChatInputFieldState extends State<ChatInputField> {
                     ),
                     child: TextField(
                       controller: _controller,
+                      focusNode: _focusNode,
+                      autofocus: false,
                       onChanged: _handleTextChanged,
                       onSubmitted: _handleSubmitted,
                       decoration: InputDecoration(
@@ -159,7 +164,10 @@ class _ChatInputFieldState extends State<ChatInputField> {
                     ),
                     onPressed:
                         _isComposing
-                            ? () => _handleSubmitted(_controller.text)
+                            ? () {
+                              _handleSubmitted(_controller.text);
+                              _focusNode.unfocus(); // Clear focus after sending
+                            }
                             : null,
                     tooltip: 'Send message',
                   ),
