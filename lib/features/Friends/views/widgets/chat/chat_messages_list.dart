@@ -39,6 +39,7 @@ class ChatMessagesList extends StatefulWidget {
 
 class _ChatMessagesListState extends State<ChatMessagesList> {
   DateTime? _lastMarkedAsRead;
+  MessagesLoadedState? _lastLoadedState;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +49,16 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.error), backgroundColor: Colors.red),
           );
+        } else if (state is ReactionBlockedState) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 3),
+            ),
+          );
         } else if (state is MessagesLoadedState) {
+          _lastLoadedState = state; // Store the last loaded state
           _handleMessagesLoaded();
         } else if (state is RoomInvitationSentState) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -66,6 +76,14 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
           return _buildMessagesList(state);
         } else if (state is ChatErrorState) {
           return Center(child: Text(state.error));
+        } else if (state is ReactionBlockedState) {
+          // Show the messages list even when reaction is blocked
+          // The snackbar will show the blocking message
+          final lastLoadedState = _getLastLoadedState();
+          if (lastLoadedState != null) {
+            return _buildMessagesList(lastLoadedState);
+          }
+          return const Center(child: Text(''));
         }
 
         return const Center(child: Text(''));
@@ -158,5 +176,10 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
         RoomJoiningUtils.showJoiningError(context, 'Failed to join room');
       }
     }
+  }
+
+  /// Get the last loaded state for fallback display
+  MessagesLoadedState? _getLastLoadedState() {
+    return _lastLoadedState;
   }
 }

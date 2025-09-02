@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/chat_service.dart';
 import 'package:zentry_pomodoro_app/features/Friends/viewmodels/chat_states.dart';
+import 'package:zentry_pomodoro_app/features/Friends/data/models/reaction_result.dart';
 
 class ChatCubit extends Cubit<ChatState> {
   final ChatService _chatService = ChatService();
@@ -165,7 +166,28 @@ class ChatCubit extends Cubit<ChatState> {
   /// Toggle a reaction on a message
   Future<void> toggleReaction(String messageId, String emoji) async {
     try {
-      await _chatService.toggleReaction(messageId, emoji);
+      final result = await _chatService.toggleReaction(messageId, emoji);
+      if (result == ReactionResult.blocked) {
+        // Show blocking message
+        if (!isClosed) {
+          emit(
+            ReactionBlockedState(
+              'Cannot react to message - user is blocked or has blocked you',
+            ),
+          );
+        }
+        return;
+      } else if (result == ReactionResult.notFriends) {
+        // Show not friends message
+        if (!isClosed) {
+          emit(
+            ReactionBlockedState(
+              'Cannot react to message - users are not friends',
+            ),
+          );
+        }
+        return;
+      }
       // Messages will automatically update via stream, no need to reload
     } catch (e) {
       if (!isClosed) {

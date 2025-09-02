@@ -18,6 +18,11 @@ class MessagesLoadedState extends ChatState {
 
 class RoomInvitationSentState extends ChatState {}
 
+class ReactionBlockedState extends ChatState {
+  final String message;
+  ReactionBlockedState(this.message);
+}
+
 class ConversationsLoadedState extends ChatState {
   final List<Map<String, dynamic>> conversations;
   ConversationsLoadedState(this.conversations);

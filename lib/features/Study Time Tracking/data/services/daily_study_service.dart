@@ -24,7 +24,7 @@ class DailyStudyService {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         return Duration(
-          seconds: data[FirebaseConstants.totalStudyTimeField] ?? 0,
+          minutes: data[FirebaseConstants.totalStudyTimeField] ?? 0,
         );
       }
       return Duration.zero;
@@ -52,7 +52,7 @@ class DailyStudyService {
         final currentTime =
             doc.exists
                 ? Duration(
-                  seconds:
+                  minutes:
                       doc.data()![FirebaseConstants.totalStudyTimeField] ?? 0,
                 )
                 : Duration.zero;
@@ -88,7 +88,7 @@ class DailyStudyService {
         final doc = await transaction.get(userRef);
         if (doc.exists) {
           final currentTotal = Duration(
-            seconds: doc.data()![FirebaseConstants.totalStudyTimeField] ?? 0,
+            minutes: doc.data()![FirebaseConstants.totalStudyTimeField] ?? 0,
           );
           final newTotal = currentTotal + studyTime;
 
@@ -121,7 +121,7 @@ class DailyStudyService {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         return Duration(
-          seconds: data[FirebaseConstants.totalStudyTimeField] ?? 0,
+          minutes: data[FirebaseConstants.totalStudyTimeField] ?? 0,
         );
       }
       return Duration.zero;
@@ -216,7 +216,7 @@ class DailyStudyService {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         return Duration(
-          seconds: data[FirebaseConstants.totalStudyTimeField] ?? 0,
+          minutes: data[FirebaseConstants.totalStudyTimeField] ?? 0,
         );
       }
       return Duration.zero;

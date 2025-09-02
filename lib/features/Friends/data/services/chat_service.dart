@@ -4,7 +4,9 @@ import 'package:zentry_pomodoro_app/features/Friends/data/models/chat_message.da
 import 'package:zentry_pomodoro_app/features/Friends/data/services/online_status_service.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/block_service.dart';
 import 'package:zentry_pomodoro_app/features/Friends/data/services/user_service.dart';
+import 'package:zentry_pomodoro_app/features/Friends/data/services/friends_service.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
+import 'package:zentry_pomodoro_app/features/Friends/data/models/reaction_result.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -12,6 +14,7 @@ class ChatService {
   final OnlineStatusService _onlineStatusService = OnlineStatusService();
   final BlockService _blockService = BlockService();
   final UserService _userService = UserService();
+  final FriendsService _friendsService = FriendsService();
 
   /// Send a text message to a friend
   Future<void> sendMessage({
@@ -278,7 +281,8 @@ class ChatService {
   }
 
   /// Add or remove a reaction to a message
-  Future<void> toggleReaction(String messageId, String emoji) async {
+  /// Returns a result indicating success or the reason for failure
+  Future<ReactionResult> toggleReaction(String messageId, String emoji) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) throw Exception('User not authenticated');
 
@@ -292,6 +296,36 @@ class ChatService {
       }
 
       final data = messageDoc.data()!;
+
+      // Get the other user's ID from the message
+      final senderId = data['senderId'] as String?;
+      final receiverId = data['receiverId'] as String?;
+      final otherUserId = senderId == currentUser.uid ? receiverId : senderId;
+
+      if (otherUserId == null) {
+        throw Exception('Invalid message data');
+      }
+
+      // Check if users can interact (friendship status and blocking status)
+      final canInteract = await _blockService.canUsersInteract(
+        currentUser.uid,
+        otherUserId,
+      );
+      if (!canInteract) {
+        // Return blocked result
+        return ReactionResult.blocked;
+      }
+
+      // Check if users are friends
+      final isFriend = await _friendsService.checkIfFriends(
+        currentUser.uid,
+        otherUserId,
+      );
+      if (!isFriend) {
+        // Return not friends result
+        return ReactionResult.notFriends;
+      }
+
       final reactions = Map<String, List<String>>.from(
         (data['reactions'] as Map<String, dynamic>?)?.map(
               (key, value) => MapEntry(key, List<String>.from(value)),
@@ -335,6 +369,8 @@ class ChatService {
 
       transaction.update(messageRef, {'reactions': newReactions});
     });
+
+    return ReactionResult.success; // Return success if reaction was completed
   }
 
   /// Send a reply message

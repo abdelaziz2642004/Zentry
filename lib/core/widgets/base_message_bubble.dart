@@ -46,32 +46,43 @@ abstract class BaseMessageBubble<T> extends StatelessWidget {
 
   /// Get the message bubble color
   Color getMessageBubbleColor() {
-    return isMyMessage ? Colors.blue[500]! : Colors.grey[100]!;
+    return isMyMessage
+        ? const Color(0xFF2CACAD) // Bright blue for my messages
+        : const Color(0xFF072E33); // Dark blue for other messages
   }
 
   /// Get the message text color
   Color getMessageTextColor() {
-    return isMyMessage ? Colors.white : Colors.grey[800]!;
+    return isMyMessage
+        ? const Color(0xFFD9F5F0) // Light text for my messages
+        : const Color(0xFFD9F5F0); // Light text for other messages
   }
 
   /// Get the timestamp color
   Color getTimestampColor() {
-    return isMyMessage ? Colors.white70 : Colors.grey[500]!;
+    return isMyMessage
+        ? const Color(0xFF75E2E0).withOpacity(0.8) // Light blue for my messages
+        : const Color(
+          0xFF6DA5C0,
+        ).withOpacity(0.8); // Light blue for other messages
   }
 
   /// Get the sender name color
   Color getSenderNameColor() {
-    return Colors.grey[600]!;
+    return const Color(0xFF75E2E0); // Light blue for sender names
   }
 
   /// Get the avatar background color
   Color getAvatarBackgroundColor() {
-    return isMyMessage ? Colors.blue[400]! : Colors.grey[400]!;
+    return isMyMessage
+        ? const Color(0xFF0F9E9C) // Bright blue for my avatar
+        : const Color(0xFF0C7075); // Darker blue for other avatars
   }
 
   /// Get the max width for the message bubble
   double getMaxMessageWidth(BuildContext context) {
-    return MediaQuery.of(context).size.width * 0.75;
+    return MediaQuery.of(context).size.width *
+        0.85; // Increased from 0.75 to 0.85
   }
 
   @override
@@ -100,17 +111,27 @@ abstract class BaseMessageBubble<T> extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 10,
+          ), // Increased padding
           decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(16),
+            color: const Color(
+              0xFF0C7075,
+            ).withOpacity(0.3), // Updated to match theme
+            borderRadius: BorderRadius.circular(20), // Increased radius
+            border: Border.all(
+              color: const Color(0xFF2CACAD).withOpacity(0.5),
+              width: 1,
+            ),
           ),
           child: Text(
             messageContent,
-            style: TextStyle(
-              color: Colors.grey[700],
-              fontSize: 12,
+            style: const TextStyle(
+              color: Color(0xFFD9F5F0), // Updated to match theme
+              fontSize: 13, // Slightly larger
               fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -123,10 +144,20 @@ abstract class BaseMessageBubble<T> extends StatelessWidget {
       onLongPress: () => _showMessageOptions(context),
       child: Container(
         constraints: BoxConstraints(maxWidth: getMaxMessageWidth(context)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ), // Increased from 16,12 to 20,16
         decoration: BoxDecoration(
           color: getMessageBubbleColor(),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20), // Increased from 16 to 20
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
