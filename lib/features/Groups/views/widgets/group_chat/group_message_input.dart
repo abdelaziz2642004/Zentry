@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Groups/data/models/group_message.dart';
 import 'package:zentry_pomodoro_app/features/Groups/viewmodels/group_chat_cubit.dart';
-import 'package:zentry_pomodoro_app/core/colors.dart';
 
 class GroupMessageInput extends StatefulWidget {
   final GroupMessage? replyingTo;

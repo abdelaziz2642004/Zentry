@@ -51,20 +51,6 @@ class _CreateGroupFormState extends State<CreateGroupForm> {
     super.dispose();
   }
 
-  void _handleSubmit() {
-    if (widget.formKey.currentState!.validate()) {
-      widget.onSubmit(
-        _nameController.text.trim(),
-        _descriptionController.text.trim(),
-        _selectedCategory,
-        int.parse(_maxMembersController.text),
-        _tags,
-        _isPublic,
-        !_isPublic ? _passwordController.text.trim() : null,
-      );
-    }
-  }
-
   void _addTag(String tag) {
     if (tag.isNotEmpty && !_tags.contains(tag)) {
       setState(() {

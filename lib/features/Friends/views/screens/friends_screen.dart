@@ -52,59 +52,227 @@ class _FriendsScreenState extends State<FriendsScreen>
         onRefresh: _refreshFriendsList,
         onAddFriend: _showAddFriendDialog,
       ),
-      body: Column(
+      body: Stack(
         children: [
+          // Background gradient overlay
           Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.5,
                 colors: [
-                  const Color(0xFF05161A).withOpacity(0.9),
-                  const Color(0xFF072E33).withOpacity(0.8),
+                  const Color(0xFF2CACAD).withOpacity(0.05),
+                  const Color(0xFF05161A).withOpacity(0.8),
+                  const Color(0xFF05161A),
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                stops: const [0.0, 0.3, 1.0],
               ),
-              border: Border(
-                bottom: BorderSide(
-                  color: const Color(0xFF2CACAD).withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              labelColor: const Color(0xFF2CACAD),
-              unselectedLabelColor: const Color(0xFFD9F5F0).withOpacity(0.6),
-              indicatorColor: const Color(0xFF2CACAD),
-              indicatorWeight: 3,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
-              ),
-              tabs: const [Tab(text: 'Friends'), Tab(text: 'Requests')],
             ),
           ),
-          Expanded(
-            child: MultiBlocListener(
-              listeners: [
-                BlocListener<FriendsCubit, FriendsState>(
-                  listener: _handleFriendsStateChanges,
-                ),
-                BlocListener<FriendRequestsCubit, FriendsState>(
-                  listener: _handleFriendRequestsStateChanges,
-                ),
-                BlocListener<FriendsListCubit, FriendsState>(
-                  listener: _handleFriendsListStateChanges,
-                ),
-              ],
-              child: TabBarView(
-                controller: _tabController,
-                children: const [FriendsTab(), RequestsTab()],
+
+          // Main content
+          Column(
+            children: [
+              // Enhanced tab bar with animations
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 800),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 30 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF05161A).withOpacity(0.95),
+                              const Color(0xFF072E33).withOpacity(0.9),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFF2CACAD).withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF2CACAD).withOpacity(0.2),
+                              blurRadius: 15,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: TabBar(
+                            controller: _tabController,
+                            labelColor: const Color(0xFFD9F5F0),
+                            unselectedLabelColor: const Color(
+                              0xFFD9F5F0,
+                            ).withOpacity(0.6),
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            indicator: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFF2CACAD).withOpacity(0.8),
+                                  const Color(0xFF0F9E9C).withOpacity(0.6),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF2CACAD,
+                                  ).withOpacity(0.4),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            labelStyle: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              letterSpacing: 0.5,
+                            ),
+                            unselectedLabelStyle: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                            tabs: [
+                              Tab(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.people_outline,
+                                        size: 20,
+                                        color:
+                                            _tabController.index == 0
+                                                ? const Color(0xFFD9F5F0)
+                                                : const Color(
+                                                  0xFFD9F5F0,
+                                                ).withOpacity(0.6),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Friends'),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Tab(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.person_add_outlined,
+                                        size: 20,
+                                        color:
+                                            _tabController.index == 1
+                                                ? const Color(0xFFD9F5F0)
+                                                : const Color(
+                                                  0xFFD9F5F0,
+                                                ).withOpacity(0.6),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Requests'),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
+
+              // Content with staggered animation
+              Expanded(
+                child: TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 1000),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  builder: (context, value, child) {
+                    return Transform.translate(
+                      offset: Offset(0, 50 * (1 - value)),
+                      child: Opacity(
+                        opacity: value,
+                        child: MultiBlocListener(
+                          listeners: [
+                            BlocListener<FriendsCubit, FriendsState>(
+                              listener: _handleFriendsStateChanges,
+                            ),
+                            BlocListener<FriendRequestsCubit, FriendsState>(
+                              listener: _handleFriendRequestsStateChanges,
+                            ),
+                            BlocListener<FriendsListCubit, FriendsState>(
+                              listener: _handleFriendsListStateChanges,
+                            ),
+                          ],
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            child: TabBarView(
+                              controller: _tabController,
+                              children: const [FriendsTab(), RequestsTab()],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          // Floating Quick Actions
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 1200),
+              tween: Tween(begin: 0.0, end: 1.0),
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: FloatingActionButton.extended(
+                    onPressed: _showQuickActionsDialog,
+                    backgroundColor: const Color(0xFF2CACAD),
+                    foregroundColor: const Color(0xFF05161A),
+                    elevation: 8,
+                    icon: const Icon(Icons.add_circle_outline, size: 24),
+                    label: const Text(
+                      'Quick Add',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -151,6 +319,138 @@ class _FriendsScreenState extends State<FriendsScreen>
         builder: (context) => const AddFriendDialog(),
       );
     }
+  }
+
+  void _showQuickActionsDialog() {
+    if (!_disposed) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder:
+            (context) => Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF05161A).withOpacity(0.95),
+                    const Color(0xFF072E33).withOpacity(0.9),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(25),
+                ),
+                border: Border.all(
+                  color: const Color(0xFF2CACAD).withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2CACAD).withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Text(
+                    'Quick Actions',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFD9F5F0),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildQuickActionButton(
+                        icon: Icons.person_add_outlined,
+                        label: 'Add Friend',
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showAddFriendDialog();
+                        },
+                      ),
+                      _buildQuickActionButton(
+                        icon: Icons.qr_code_scanner,
+                        label: 'Scan Code',
+                        onTap: () {
+                          Navigator.pop(context);
+                          // TODO: Implement QR code scanning
+                        },
+                      ),
+                      _buildQuickActionButton(
+                        icon: Icons.share,
+                        label: 'Share Code',
+                        onTap: () {
+                          Navigator.pop(context);
+                          // TODO: Implement friend code sharing
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+      );
+    }
+  }
+
+  Widget _buildQuickActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 80,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF2CACAD).withOpacity(0.2),
+              const Color(0xFF0F9E9C).withOpacity(0.1),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF2CACAD).withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 28, color: const Color(0xFF2CACAD)),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFD9F5F0),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _handleFriendsStateChanges(BuildContext context, FriendsState state) {

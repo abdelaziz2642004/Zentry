@@ -6,6 +6,12 @@ class ProfileEmail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(email, style: const TextStyle(color: Colors.grey));
+    return Text(
+      email,
+      style: const TextStyle(color: Colors.grey),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      softWrap: false,
+    );
   }
 }

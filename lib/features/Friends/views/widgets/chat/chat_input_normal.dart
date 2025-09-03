@@ -140,81 +140,175 @@ class _ChatInputNormalState extends State<ChatInputNormal> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: widget.messageController,
-                    onSubmitted: (_) => _handleSubmitted(),
-                    style: const TextStyle(color: Color(0xFFD9F5F0)),
-                    decoration: InputDecoration(
-                      hintText:
-                          widget.replyingTo != null
-                              ? 'Reply to message...'
-                              : 'Type a message...',
-                      hintStyle: TextStyle(
-                        color: const Color(0xFFD9F5F0).withOpacity(0.6),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF2CACAD).withOpacity(0.15),
+                          const Color(0xFF0F9E9C).withOpacity(0.1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color:
+                            _isComposing
+                                ? const Color(0xFF2CACAD).withOpacity(0.5)
+                                : const Color(0xFF2CACAD).withOpacity(0.3),
+                        width: _isComposing ? 1.5 : 1,
                       ),
-                      filled: true,
-                      fillColor: const Color(0xFF2CACAD).withOpacity(0.1),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                      boxShadow: [
+                        if (_isComposing)
+                          BoxShadow(
+                            color: const Color(0xFF2CACAD).withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                      ],
                     ),
-                    maxLines: null,
-                    textCapitalization: TextCapitalization.sentences,
-                    textInputAction: TextInputAction.send,
+                    child: TextField(
+                      controller: widget.messageController,
+                      onSubmitted: (_) => _handleSubmitted(),
+                      style: const TextStyle(
+                        color: Color(0xFFD9F5F0),
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                      decoration: InputDecoration(
+                        hintText:
+                            widget.replyingTo != null
+                                ? '💬 Reply to message...'
+                                : '💭 Type a message...',
+                        hintStyle: TextStyle(
+                          color: const Color(0xFFD9F5F0).withOpacity(0.6),
+                          fontSize: 15,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        prefixIcon:
+                            _isComposing
+                                ? Icon(
+                                  Icons.edit_outlined,
+                                  color: const Color(
+                                    0xFF2CACAD,
+                                  ).withOpacity(0.7),
+                                  size: 20,
+                                )
+                                : null,
+                      ),
+                      maxLines: 4,
+                      minLines: 1,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.send,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color:
-                        _isComposing && !widget.isSending
-                            ? const Color(0xFF2CACAD)
-                            : const Color(0xFF2CACAD).withOpacity(0.3),
-                    shape: BoxShape.circle,
-                    boxShadow:
-                        _isComposing && !widget.isSending
-                            ? [
-                              BoxShadow(
-                                color: const Color(0xFF2CACAD).withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                            : null,
+                TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 200),
+                  tween: Tween(
+                    begin: 0.0,
+                    end: _isComposing && !widget.isSending ? 1.0 : 0.0,
                   ),
-                  child: IconButton(
-                    onPressed:
-                        _isComposing && !widget.isSending
-                            ? _handleSubmitted
-                            : null,
-                    icon:
-                        widget.isSending
-                            ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF05161A),
-                                ),
-                              ),
-                            )
-                            : Icon(
-                              Icons.send,
-                              color:
-                                  _isComposing && !widget.isSending
-                                      ? const Color(0xFF05161A)
-                                      : const Color(
-                                        0xFFD9F5F0,
-                                      ).withOpacity(0.5),
-                              size: 20,
+                  builder: (context, value, child) {
+                    return Transform.scale(
+                      scale: 0.9 + (0.1 * value),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient:
+                              _isComposing && !widget.isSending
+                                  ? LinearGradient(
+                                    colors: [
+                                      const Color(0xFF2CACAD),
+                                      const Color(0xFF0F9E9C),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                  : LinearGradient(
+                                    colors: [
+                                      const Color(0xFF2CACAD).withOpacity(0.3),
+                                      const Color(0xFF0F9E9C).withOpacity(0.2),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                          shape: BoxShape.circle,
+                          boxShadow:
+                              _isComposing && !widget.isSending
+                                  ? [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF2CACAD,
+                                      ).withOpacity(0.4),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF0F9E9C,
+                                      ).withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                  : [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF2CACAD,
+                                      ).withOpacity(0.1),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap:
+                                _isComposing && !widget.isSending
+                                    ? _handleSubmitted
+                                    : null,
+                            borderRadius: BorderRadius.circular(24),
+                            child: Container(
+                              decoration: BoxDecoration(shape: BoxShape.circle),
+                              child:
+                                  widget.isSending
+                                      ? const Center(
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Color(0xFF05161A),
+                                                ),
+                                          ),
+                                        ),
+                                      )
+                                      : Icon(
+                                        Icons.send_rounded,
+                                        color:
+                                            _isComposing && !widget.isSending
+                                                ? const Color(0xFF05161A)
+                                                : const Color(
+                                                  0xFFD9F5F0,
+                                                ).withOpacity(0.5),
+                                        size: 22,
+                                      ),
                             ),
-                  ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
