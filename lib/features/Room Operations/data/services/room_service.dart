@@ -1,36 +1,48 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 import 'package:zentry_pomodoro_app/core/functions.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/data/models/pomodoro_room.dart';
+import 'dart:math';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class RoomService {
-  Future<Map<dynamic, dynamic>?> recentlyFetch() async {
+  Future<PomodoroRoom?> recentlyFetch() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
     final DatabaseReference userRef = FirebaseDatabase.instance.ref(
       FirebaseConstants.getUserPath(user.uid),
     );
 
-    // final DataSnapshot joinedSnapshot = await userRef.child("joinedroom").get();
     final DataSnapshot recentSnapshot = await userRef.child("recently").get();
-    if (recentSnapshot.exists) {
-      final String recentRoomCode = recentSnapshot.value as String;
+    if (!recentSnapshot.exists) return null;
 
-      final DatabaseReference recentRoomRef = FirebaseDatabase.instance.ref(
-        FirebaseConstants.getRoomPath(recentRoomCode),
-      );
-      final DataSnapshot recentRoomSnap = await recentRoomRef.get();
+    final String recentRoomCode = recentSnapshot.value as String;
 
-      if (recentRoomSnap.exists) {
-        final roomData = recentRoomSnap.value as Map<dynamic, dynamic>;
-        // roomData['roomCode'] = recentRoomCode;
-        return roomData;
-      }
-      return null;
+    // Fetch Firestore room metadata
+    final DocumentSnapshot<Map<String, dynamic>> doc =
+        await FirebaseFirestore.instance
+            .collection(FirebaseConstants.roomsCollection)
+            .doc(recentRoomCode)
+            .get();
+
+    if (!doc.exists) return null;
+
+    // Fetch current users from RTDB (may be empty)
+    final DatabaseReference usersRef = FirebaseDatabase.instance.ref(
+      FirebaseConstants.getRoomUsersPath(recentRoomCode),
+    );
+    final DataSnapshot usersSnap = await usersRef.get();
+    final List<String> users = <String>[];
+    if (usersSnap.exists && usersSnap.value is Map) {
+      final Map<dynamic, dynamic> usersMap =
+          usersSnap.value as Map<dynamic, dynamic>;
+      users.addAll(usersMap.keys.map((k) => k.toString()));
     }
-    return null;
+
+    return PomodoroRoom.fromDocumentWithUsers(doc, users);
   }
 
   Future<String?> joinedRoomFetch() async {
@@ -58,91 +70,175 @@ class RoomService {
       final uniqueRoomCode = await generateUniqueRoomCode();
       room.setRoomCode(uniqueRoomCode);
 
-      final roomPath = FirebaseConstants.getRoomPath(room.roomCode);
-      final DatabaseReference roomRef = FirebaseDatabase.instance.ref(roomPath);
-      final roomData = room.toMapRealTimeDB();
+      // Write room metadata to Firestore only
+      final DocumentReference<Map<String, dynamic>> roomDoc = FirebaseFirestore
+          .instance
+          .collection(FirebaseConstants.roomsCollection)
+          .doc(room.roomCode);
 
-      await roomRef.set(roomData);
+      await roomDoc.set(room.toMap());
+
+      // Ensure RTDB users node exists (optional - can be lazy created on join)
+      // final DatabaseReference usersRef = FirebaseDatabase.instance.ref(
+      //   FirebaseConstants.getRoomUsersPath(room.roomCode),
+      // );
+      // await usersRef.set({});
     } catch (e) {
       rethrow;
     }
   }
 
+  /// Enhanced join room with better presence tracking
   Future<PomodoroRoom?> joinRoom(String roomCode) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
 
-    final DatabaseReference roomRef = FirebaseDatabase.instance.ref(
-      FirebaseConstants.getRoomPath(roomCode),
-    );
-    final DataSnapshot roomSnapshot = await roomRef.get();
+    // Validate room exists in Firestore
+    final DocumentSnapshot<Map<String, dynamic>> doc =
+        await FirebaseFirestore.instance
+            .collection(FirebaseConstants.roomsCollection)
+            .doc(roomCode)
+            .get();
 
-    if (roomSnapshot.exists) {
-      final DatabaseReference userRef = roomRef.child(
-        "${FirebaseConstants.roomsUsersPath}/${user.uid}",
-      );
-
-      await userRef.set(true); // user is now in the room
-      // await userRef
-      //     .onDisconnect() // lw el net 2t3 aw 7aga
-      //     .remove();
-
-      // Add joined room to Realtime Database under users/{userID}/joinedroom
-      final userDbRef = FirebaseDatabase.instance.ref(
-        FirebaseConstants.getUserPath(user.uid),
-      );
-
-      // Set the recently joined room in Realtime Database (persistent)
-      await userDbRef.child("recently").set(roomCode);
-
-      // Set the joined room in Realtime Database (disconnectable)
-      await userDbRef.child("joinedroom").set(roomCode);
-      // await userDbRef
-      //     .child("joinedroom")
-      //     .onDisconnect()
-      //     .remove(); // Remove on disconnect
-
-      final roomData = roomSnapshot.value as Map<dynamic, dynamic>;
-      // roomData['roomCode'] = roomCode;
-      final PomodoroRoom room = PomodoroRoom.fromRealtimeMap(roomData);
-
-      return room;
-    } else {
+    if (!doc.exists) {
       return null;
     }
-  }
 
-  Future<void> leaveRoom(String roomCode) async {
-    // Reference to the user's entry in the Realtime Database
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    // Add user to RTDB users list for the room
     final DatabaseReference userRef = FirebaseDatabase.instance
         .ref(FirebaseConstants.getRoomUsersPath(roomCode))
         .child(user.uid);
 
-    // Remove the user from the room
-    await userRef.remove();
+    // Set user as present and remove on disconnect
+    await userRef.set(true);
+    await userRef.onDisconnect().remove();
 
-    final DatabaseReference userRef2 = FirebaseDatabase.instance.ref(
+    // Add joined room to Realtime Database under users/{userID}/joinedroom
+    final userDbRef = FirebaseDatabase.instance.ref(
       FirebaseConstants.getUserPath(user.uid),
     );
 
-    userRef2.child("joinedroom").remove();
+    // Set the recently joined room in Realtime Database (persistent)
+    await userDbRef.child("recently").set(roomCode);
+
+    // Set the joined room in Realtime Database (disconnectable)
+    await userDbRef.child("joinedroom").set(roomCode);
+    await userDbRef.child("joinedroom").onDisconnect().remove();
+
+    // Build current users list
+    final DatabaseReference usersRef = FirebaseDatabase.instance.ref(
+      FirebaseConstants.getRoomUsersPath(roomCode),
+    );
+    final DataSnapshot usersSnap = await usersRef.get();
+    final List<String> users = <String>[];
+    if (usersSnap.exists && usersSnap.value is Map) {
+      final Map<dynamic, dynamic> usersMap =
+          usersSnap.value as Map<dynamic, dynamic>;
+      users.addAll(usersMap.keys.map((k) => k.toString()));
+    }
+
+    final PomodoroRoom room = PomodoroRoom.fromDocumentWithUsers(doc, users);
+
+    return room;
   }
 
-  // Future<List<PomodoroRoom>> fetchAllRooms() async {
-  //   final roomsSnap = await _roomsRef.get();
-  //
-  //   if (roomsSnap.exists) {
-  //     final List roomsSnapList = roomsSnap.value as List<dynamic>;
-  //     final List<PomodoroRoom> roomsList =
-  //         roomsSnapList.map((roomSnap) {
-  //           return PomodoroRoom.fromDocument(roomSnap);
-  //         }).toList();
-  //
-  //     return roomsList;
-  //   } else {
-  //     return [];
-  //   }
-  // }
+  Future<void> leaveRoom(String roomCode) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Remove user from RTDB users list
+    final DatabaseReference userRef = FirebaseDatabase.instance
+        .ref(FirebaseConstants.getRoomUsersPath(roomCode))
+        .child(user.uid);
+    await userRef.remove();
+
+    // Remove joined room from Realtime Database under users/{userID}/joinedroom
+    final userDbRef = FirebaseDatabase.instance.ref(
+      FirebaseConstants.getUserPath(user.uid),
+    );
+    await userDbRef.child("joinedroom").remove();
+  }
+
+  /// Fetch all public rooms from Firestore
+  Future<List<PomodoroRoom>> fetchAllPublicRooms() async {
+    try {
+      final QuerySnapshot<Map<String, dynamic>> snapshot =
+          await FirebaseFirestore.instance
+              .collection(FirebaseConstants.roomsCollection)
+              .where('Public', isEqualTo: true)
+              .where('availableRoom', isEqualTo: true)
+              .get();
+
+      final List<PomodoroRoom> rooms = [];
+
+      for (final doc in snapshot.docs) {
+        final room = PomodoroRoom.fromDocument(doc);
+
+        // Skip finished rooms
+        if (!room.isFinished) {
+          // Fetch current users from RTDB for each room
+          final DatabaseReference usersRef = FirebaseDatabase.instance.ref(
+            FirebaseConstants.getRoomUsersPath(room.roomCode),
+          );
+          final DataSnapshot usersSnap = await usersRef.get();
+          final List<String> users = <String>[];
+
+          if (usersSnap.exists && usersSnap.value is Map) {
+            final Map<dynamic, dynamic> usersMap =
+                usersSnap.value as Map<dynamic, dynamic>;
+            users.addAll(usersMap.keys.map((k) => k.toString()));
+          }
+
+          // Create room with current users
+          final roomWithUsers = PomodoroRoom.fromDocumentWithUsers(doc, users);
+          rooms.add(roomWithUsers);
+        }
+      }
+
+      return rooms;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Stream of all public rooms from Firestore
+  Stream<List<PomodoroRoom>> streamPublicRooms() {
+    return FirebaseFirestore.instance
+        .collection(FirebaseConstants.roomsCollection)
+        .where('Public', isEqualTo: true)
+        .where('availableRoom', isEqualTo: true)
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final List<PomodoroRoom> rooms = [];
+
+          for (final doc in snapshot.docs) {
+            final room = PomodoroRoom.fromDocument(doc);
+
+            // Skip finished rooms
+            if (!room.isFinished) {
+              // Fetch current users from RTDB for each room
+              final DatabaseReference usersRef = FirebaseDatabase.instance.ref(
+                FirebaseConstants.getRoomUsersPath(room.roomCode),
+              );
+              final DataSnapshot usersSnap = await usersRef.get();
+              final List<String> users = <String>[];
+
+              if (usersSnap.exists && usersSnap.value is Map) {
+                final Map<dynamic, dynamic> usersMap =
+                    usersSnap.value as Map<dynamic, dynamic>;
+                users.addAll(usersMap.keys.map((k) => k.toString()));
+              }
+
+              // Create room with current users
+              final roomWithUsers = PomodoroRoom.fromDocumentWithUsers(
+                doc,
+                users,
+              );
+              rooms.add(roomWithUsers);
+            }
+          }
+
+          return rooms;
+        });
+  }
 }

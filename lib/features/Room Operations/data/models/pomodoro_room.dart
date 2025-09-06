@@ -65,30 +65,7 @@ class PomodoroRoom {
 
           final Map<dynamic, dynamic> usersMap =
               event.snapshot.value as Map<dynamic, dynamic>;
-
-          final List<String> onlineUsers = <String>[];
-          const int gracePeriodMinutes = 1; // 5 minutes grace period
-          const int gracePeriodMs = gracePeriodMinutes * 60 * 1000;
-          final int currentTime = DateTime.now().millisecondsSinceEpoch;
-
-          usersMap.forEach((userId, userData) {
-            if (userData is Map) {
-              final bool isOnline = userData['online'] ?? false;
-              final int lastSeen = userData['lastSeen'] ?? 0;
-
-              // Include user if they are online OR if they went offline within grace period
-              if (isOnline || (currentTime - lastSeen) < gracePeriodMs) {
-                onlineUsers.add(userId.toString());
-              }
-            } else {
-              // Handle legacy data structure (just boolean)
-              if (userData == true) {
-                onlineUsers.add(userId.toString());
-              }
-            }
-          });
-
-          return onlineUsers;
+          return usersMap.keys.map((k) => k.toString()).toList();
         });
   }
 
@@ -126,36 +103,6 @@ class PomodoroRoom {
     return session > _totalSessions ? _totalSessions : session;
   }
 
-  factory PomodoroRoom.fromRealtimeMap(Map<dynamic, dynamic> data) {
-    // Handle joinedUsers - it can be either a list or a map
-    List<String> joinedUsers = [];
-    if (data['users'] != null) {
-      // If users is a map, extract the keys (user IDs)
-      final Map<dynamic, dynamic> usersMap =
-          data['users'] as Map<dynamic, dynamic>;
-      joinedUsers = usersMap.keys.map((key) => key.toString()).toList();
-    }
-
-    return PomodoroRoom(
-      roomCode: data['roomCode'] ?? '',
-      creatorId: data['creatorId'] ?? '',
-      createdAt: Timestamp.fromMillisecondsSinceEpoch(data['createdAt'] ?? 0),
-      availableRoom: data['availableRoom'] ?? true,
-      name: data['name'] ?? '',
-      capacity: data['capacity'] ?? 0,
-      workDuration: data['workDuration'] ?? 25,
-      breakDuration: data['breakDuration'] ?? 5,
-      isPublic: data['Public'] ?? true,
-      totalSessions: data['numberOfSessions'] ?? 0,
-      tags: List<String>.from(data['tags'] ?? []),
-      joinedUsers: joinedUsers,
-      isScheduled: data['isScheduled'] ?? false,
-      scheduleTime: Timestamp.fromMillisecondsSinceEpoch(
-        data['scheduleTime'] ?? 0,
-      ),
-    );
-  }
-
   factory PomodoroRoom.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return PomodoroRoom(
@@ -170,7 +117,31 @@ class PomodoroRoom {
       isPublic: data['Public'] ?? true,
       totalSessions: data['numberOfSessions'] ?? 0,
       tags: List<String>.from(data['tags'] ?? []),
-      joinedUsers: List<String>.from(data['joinedUsers'] ?? []),
+      joinedUsers: <String>[], // joined users are NOT stored in Firestore
+      isScheduled: data['isScheduled'] ?? false,
+      scheduleTime: data['scheduleTime'] ?? Timestamp.now(),
+    );
+  }
+
+  /// Create from Firestore document and provide joined users from RTDB
+  factory PomodoroRoom.fromDocumentWithUsers(
+    DocumentSnapshot doc,
+    List<String> users,
+  ) {
+    final data = doc.data() as Map<String, dynamic>;
+    return PomodoroRoom(
+      roomCode: doc.id,
+      creatorId: data['creatorId'] ?? '',
+      createdAt: data['createdAt'] ?? Timestamp.now(),
+      availableRoom: data['availableRoom'] ?? true,
+      name: data['name'] ?? '',
+      capacity: data['capacity'] ?? 0,
+      workDuration: data['workDuration'] ?? 25,
+      breakDuration: data['breakDuration'] ?? 5,
+      isPublic: data['Public'] ?? true,
+      totalSessions: data['numberOfSessions'] ?? 0,
+      tags: List<String>.from(data['tags'] ?? []),
+      joinedUsers: users,
       isScheduled: data['isScheduled'] ?? false,
       scheduleTime: data['scheduleTime'] ?? Timestamp.now(),
     );
@@ -189,26 +160,17 @@ class PomodoroRoom {
       'Public': isPublic,
       'numberOfSessions': _totalSessions,
       'tags': tags,
-      'joinedUsers': joinedUsers,
+      // joinedUsers intentionally excluded from Firestore
+      'isScheduled': isScheduled,
+      'scheduleTime': scheduleTime,
     };
   }
 
+  /// Only users-related payload goes to Realtime DB
   Map<String, dynamic> toMapRealTimeDB() {
     return {
-      'roomCode': _roomCode,
-      'creatorId': _creatorId,
-      'createdAt': _createdAt.millisecondsSinceEpoch,
-      'availableRoom': _availableRoom,
-      'name': _name,
-      'capacity': _capacity,
-      'workDuration': _workDuration,
-      'breakDuration': _breakDuration,
-      'Public': isPublic,
-      'numberOfSessions': _totalSessions,
-      'tags': tags,
-      'joinedUsers': joinedUsers,
-      'isScheduled': isScheduled,
-      'scheduleTime': scheduleTime.millisecondsSinceEpoch,
+      // Keep RTDB minimal, users subpath will be managed separately
+      // This method can remain empty or include markers if needed in future
     };
   }
 
@@ -281,4 +243,4 @@ class PomodoroRoom {
  // remainingTime for the current phase ( work phase ) = 23 - (1 * 15) = 8
  // or remainingTime = 23 % 15 = 8
  // so we are in the work phase now for 8 mins
- // and the remaining time is 2 mins for this phase 
+ // and the remaining time is 2 mins for this phase

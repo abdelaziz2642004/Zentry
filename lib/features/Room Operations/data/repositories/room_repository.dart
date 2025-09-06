@@ -20,19 +20,20 @@ class RoomRepository {
   }
 
   Future<PomodoroRoom?> recentlyFetch() async {
-    final roomdata = await _roomService.recentlyFetch();
-    if (roomdata != null) {
-      return PomodoroRoom.fromRealtimeMap(roomdata);
-    } else {
-      return null;
-    }
+    return await _roomService.recentlyFetch();
   }
 
   Future<String?> joinedRoomFetch() async {
     return await _roomService.joinedRoomFetch();
   }
 
-  // Future<List<PomodoroRoom>> fetchAllRooms(){
-  //   return _roomService.fetchAllRooms();
-  // }
+  /// Fetch all public rooms from Firestore
+  Future<List<PomodoroRoom>> fetchAllPublicRooms() async {
+    return await _roomService.fetchAllPublicRooms();
+  }
+
+  /// Stream of all public rooms from Firestore
+  Stream<List<PomodoroRoom>> streamPublicRooms() {
+    return _roomService.streamPublicRooms();
+  }
 }

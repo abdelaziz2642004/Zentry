@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Authentication/data/models/user.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/data/models/pomodoro_room.dart';
@@ -9,10 +10,51 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 
 class RoomCubit extends Cubit<RoomStates> {
-  RoomCubit(this.roomRepository) : super(RoomInitialState());
-  PomodoroRoom? recently;
   final RoomRepository roomRepository;
   StreamSubscription<List<String>>? _joinedUsersSubscription;
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  ConnectivityResult? _lastConnectivityResult;
+  PomodoroRoom? recently;
+  List<String> _previousUserIds = [];
+
+  RoomCubit(this.roomRepository) : super(RoomInitialState()) {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+      _onConnectivityChanged,
+    );
+  }
+
+  void _onConnectivityChanged(ConnectivityResult result) {
+    if (_lastConnectivityResult == ConnectivityResult.none &&
+        result != ConnectivityResult.none) {
+      if (state is RoomJoinSuccess || state is RoomUsersUpdated) {
+        final room = (state as dynamic).room as PomodoroRoom;
+        forceRejoin(room.roomCode);
+      }
+    }
+    _lastConnectivityResult = result;
+  }
+
+  Future<void> forceRejoin(String roomCode) async {
+    try {
+      await roomRepository.leaveRoom(roomCode);
+      final room = await roomRepository.joinRoom(roomCode);
+
+      if (room == null) {
+        emit(RoomJoinFailure("Room not found or has finished"));
+        return;
+      }
+
+      recently = room;
+      _previousUserIds = room.joinedUsers.toList();
+      emit(RecentlyUpdated());
+
+      _startListeningToJoinedUsers(room);
+
+      emit(RoomJoinSuccess(room));
+    } on Exception catch (e) {
+      emit(RoomFailure(e.toString()));
+    }
+  }
 
   Future<String> atStart(FireUser user) async {
     emit(RoomLoadingState());
@@ -109,6 +151,7 @@ class RoomCubit extends Cubit<RoomStates> {
       }
 
       recently = room;
+      _previousUserIds = room.joinedUsers.toList();
       emit(RecentlyUpdated());
 
       // Start listening to joined users changes
@@ -128,6 +171,7 @@ class RoomCubit extends Cubit<RoomStates> {
 
       // Stop listening to joined users
       _stopListeningToJoinedUsers();
+      _previousUserIds = [];
 
       emit(RoomLeaveSuccess());
     } on Exception catch (e) {
@@ -141,11 +185,17 @@ class RoomCubit extends Cubit<RoomStates> {
     _stopListeningToJoinedUsers(); // Stop any existing subscription
 
     _joinedUsersSubscription = room.listenToJoinedUsers().listen(
-      (List<String> newUsers) {
-        changeInUsers(room, newUsers);
+      (List<String> newUserIds) {
+        final disconnectedUsers =
+            _previousUserIds.where((id) => !newUserIds.contains(id)).toList();
+
+        room.updateJoinedUsers(newUserIds);
+        _previousUserIds = newUserIds.toList();
+
+        emit(RoomUsersUpdated(room, disconnectedUsers));
       },
       onError: (error) {
-        // Error listening to joined users
+        emit(RoomFailure("Error listening to room users: $error"));
       },
     );
   }
@@ -156,17 +206,16 @@ class RoomCubit extends Cubit<RoomStates> {
     _joinedUsersSubscription = null;
   }
 
-  void changeInUsers(PomodoroRoom room, List<String> newJoinedUsers) {
-    if (room.joinedUsers == newJoinedUsers) {
-      return; // no change in the users
-    }
-    room.updateJoinedUsers(newJoinedUsers);
-    emit(RoomUsersUpdated(room));
+  void leaveRoomLocally() {
+    _stopListeningToJoinedUsers();
+    _previousUserIds = [];
+    emit(RoomLeaveSuccess());
   }
 
   @override
   Future<void> close() {
     _stopListeningToJoinedUsers();
+    _connectivitySubscription?.cancel();
     return super.close();
   }
 }

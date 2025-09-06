@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 
 String capitalizeFirstLetterOfEachWord(String input) {
@@ -13,10 +13,10 @@ String capitalizeFirstLetterOfEachWord(String input) {
 }
 
 /// Generates a unique 6-digit room code
-/// Returns a 6-digit string that is unique in the database
+/// Returns a 6-digit string that is unique in Firestore
 Future<String> generateUniqueRoomCode() async {
   final random = Random();
-  final database = FirebaseDatabase.instance;
+  final firestore = FirebaseFirestore.instance;
   int attempts = 0;
 
   while (attempts < 100) {
@@ -26,11 +26,13 @@ Future<String> generateUniqueRoomCode() async {
     final code = (100000 + random.nextInt(900000)).toString();
 
     try {
-      // Check if this code already exists in the database
-      final roomRef = database.ref('${FirebaseConstants.roomsDbPath}/$code');
-      final snapshot = await roomRef.get();
+      // Check if this code already exists in Firestore
+      final roomDoc = await firestore
+          .collection(FirebaseConstants.roomsCollection)
+          .doc(code)
+          .get();
 
-      if (!snapshot.exists) {
+      if (!roomDoc.exists) {
         return code;
       }
     } on Exception catch (e) {

@@ -32,12 +32,18 @@ class RoomJoinSuccess extends RoomStates {
 /// Emitted when the list of joined users in a room changes (not necessarily the current user)
 class RoomUsersUpdated extends RoomStates {
   PomodoroRoom room;
-  RoomUsersUpdated(this.room);
+  final List<String> disconnectedUsers;
+  RoomUsersUpdated(this.room, this.disconnectedUsers);
 }
 
 class RoomJoinFailure extends RoomStates {
   final String error;
   RoomJoinFailure(this.error);
+}
+
+class RoomFailure extends RoomStates {
+  final String error;
+  RoomFailure(this.error);
 }
 
 class RoomJoinLoadingState extends RoomStates {}

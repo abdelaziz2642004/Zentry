@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zentry_pomodoro_app/features/Room%20Operations/viewmodels/Room_Cubit.dart';
@@ -7,14 +10,120 @@ import 'package:zentry_pomodoro_app/core/constants/firebase_constants.dart';
 import 'package:async/async.dart';
 import 'package:zentry_pomodoro_app/features/Profile/views/widgets/profile_popup_dialog.dart';
 
-class Joineduserspart extends StatelessWidget {
+class Joineduserspart extends StatefulWidget {
   const Joineduserspart({super.key, required this.roomCode});
 
   final String roomCode;
 
   @override
+  State<Joineduserspart> createState() => _JoineduserspartState();
+}
+
+class _JoineduserspartState extends State<Joineduserspart> {
+  final Map<String, Timer> _timers = {};
+  final Map<String, int> _remainingSeconds = {};
+
+  @override
+  void dispose() {
+    for (var timer in _timers.values) {
+      timer.cancel();
+    }
+    super.dispose();
+  }
+
+  void _startTimer(String userId) {
+    _timers[userId]?.cancel();
+
+    if (mounted) {
+      setState(() {
+        _remainingSeconds[userId] = 120;
+      });
+    }
+
+    _timers[userId] = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds.containsKey(userId)) {
+        if (_remainingSeconds[userId]! > 0) {
+          if (mounted) {
+            setState(() {
+              _remainingSeconds[userId] = _remainingSeconds[userId]! - 1;
+            });
+          }
+        } else {
+          timer.cancel();
+          final currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser != null && currentUser.uid == userId) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder:
+                  (context) => AlertDialog(
+                    title: const Text("Disconnected"),
+                    content: const Text(
+                      "You have been removed from the room due to inactivity.",
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          context.read<RoomCubit>().leaveRoomLocally();
+                        },
+                        child: const Text("OK"),
+                      ),
+                    ],
+                  ),
+            );
+          }
+          if (mounted) {
+            setState(() {
+              _timers.remove(userId);
+              _remainingSeconds.remove(userId);
+            });
+          }
+        }
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<RoomCubit, RoomStates>(
+    return BlocConsumer<RoomCubit, RoomStates>(
+      listener: (context, state) {
+        if (state is RoomUsersUpdated) {
+          for (var userId in state.disconnectedUsers) {
+            _startTimer(userId);
+          }
+
+          final onlineUserIds = state.room.joinedUsers;
+          final reconnectedUsers =
+              _timers.keys
+                  .where((userId) => onlineUserIds.contains(userId))
+                  .toList();
+
+          if (reconnectedUsers.isNotEmpty) {
+            if (mounted) {
+              setState(() {
+                for (var userId in reconnectedUsers) {
+                  _timers[userId]?.cancel();
+                  _timers.remove(userId);
+                  _remainingSeconds.remove(userId);
+                }
+              });
+            }
+          }
+        } else if (state is RoomJoinSuccess) {
+          if (mounted) {
+            setState(() {
+              for (var timer in _timers.values) {
+                timer.cancel();
+              }
+              _timers.clear();
+              _remainingSeconds.clear();
+            });
+          }
+        }
+      },
       buildWhen: (previous, current) {
         return current is RoomJoinSuccess ||
             current is RoomJoinFailure ||
@@ -26,9 +135,12 @@ class Joineduserspart extends StatelessWidget {
           return const CircularProgressIndicator();
         } else if (state is RoomJoinSuccess || state is RoomUsersUpdated) {
           final roomDetails = (state as dynamic).room;
-          final userIds = roomDetails.joinedUsers;
+          final onlineUserIds = roomDetails.joinedUsers as List<String>;
 
-          if (userIds.isEmpty) {
+          final allUserIds =
+              (onlineUserIds.toSet()..addAll(_remainingSeconds.keys)).toList();
+
+          if (allUserIds.isEmpty) {
             return const Text("No users in this room.");
           }
 
@@ -46,7 +158,7 @@ class Joineduserspart extends StatelessWidget {
             return chunks;
           }
 
-          final userIdChunks = chunked(userIds, 10);
+          final userIdChunks = chunked(allUserIds, 10);
           final streams =
               userIdChunks
                   .map(
@@ -62,7 +174,7 @@ class Joineduserspart extends StatelessWidget {
             stream: StreamZip(streams),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return Text('Error: \\${snapshot.error}');
+                return Text('Error: ${snapshot.error}');
               }
               if (!snapshot.hasData) {
                 return const CircularProgressIndicator();
@@ -76,39 +188,13 @@ class Joineduserspart extends StatelessWidget {
               final userMap = {for (var doc in allDocs) doc.id: doc};
               return Column(
                 children:
-                    userIds.map<Widget>((userId) {
+                    allUserIds.map<Widget>((userId) {
                       final userDoc = userMap[userId];
-                      if (userDoc == null || !userDoc.exists) {
-                        return const ListTile(title: Text("User not found"));
-                      }
-                      final userData = userDoc.data() as Map<String, dynamic>;
-
-                      final userName =
-                          userData[FirebaseConstants.fullNameField] ??
-                          'Unknown User';
-                      // print(userName);
-                      final userImage =
-                          userData[FirebaseConstants.imageUrlField] ?? '';
-                      return ListTile(
-                        leading:
-                            userImage.isNotEmpty
-                                ? CircleAvatar(
-                                  backgroundImage: NetworkImage(userImage),
-                                )
-                                : const CircleAvatar(child: Icon(Icons.person)),
-                        title: Text(userName),
-                        trailing: const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: Colors.grey,
-                        ),
-                        onTap:
-                            () => _showUserProfilePopup(
-                              context,
-                              userId,
-                              userName,
-                              userImage,
-                            ),
+                      final remaining = _remainingSeconds[userId] ?? 0;
+                      return UserTile(
+                        userDoc: userDoc,
+                        remainingSeconds: remaining,
+                        userId: userId,
                       );
                     }).toList(),
               );
@@ -117,6 +203,53 @@ class Joineduserspart extends StatelessWidget {
         }
         return const SizedBox.shrink();
       },
+    );
+  }
+}
+
+class UserTile extends StatelessWidget {
+  final DocumentSnapshot? userDoc;
+  final int remainingSeconds;
+  final String userId;
+
+  const UserTile({
+    super.key,
+    required this.userDoc,
+    required this.remainingSeconds,
+    required this.userId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (userDoc == null || !userDoc!.exists) {
+      return const ListTile(title: Text("User not found"));
+    }
+    final userData = userDoc!.data() as Map<String, dynamic>;
+
+    final userName =
+        userData[FirebaseConstants.fullNameField] ?? 'Unknown User';
+    final userImage = userData[FirebaseConstants.imageUrlField] ?? '';
+
+    bool isDisconnected = remainingSeconds > 0;
+
+    return ListTile(
+      leading:
+          userImage.isNotEmpty
+              ? CircleAvatar(backgroundImage: NetworkImage(userImage))
+              : const CircleAvatar(child: Icon(Icons.person)),
+      title: Text(userName),
+      trailing:
+          isDisconnected
+              ? Text(
+                '${(remainingSeconds ~/ 60).toString().padLeft(2, '0')}:${(remainingSeconds % 60).toString().padLeft(2, '0')}',
+                style: const TextStyle(color: Colors.red),
+              )
+              : const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey,
+              ),
+      onTap: () => _showUserProfilePopup(context, userId, userName, userImage),
     );
   }
 
@@ -130,166 +263,5 @@ class Joineduserspart extends StatelessWidget {
       context: context,
       builder: (BuildContext context) => ProfilePopupDialog(userId: userId),
     );
-  }
-
-  Widget _buildWeeklyStudyTime(String userId) {
-    // Get current week's dates (Saturday to Friday)
-    final now = DateTime.now();
-    final currentWeekday = now.weekday; // 1 = Monday, 7 = Sunday
-
-    // Calculate Saturday of current week (weekday 6)
-    final saturday = now.subtract(Duration(days: currentWeekday - 6));
-
-    return FutureBuilder<Map<DateTime, Duration>>(
-      future: _getWeeklyStudyData(userId, saturday),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Text(
-            'Error loading study data',
-            style: TextStyle(color: Colors.red),
-          );
-        }
-
-        if (!snapshot.hasData) {
-          return const SizedBox(
-            height: 60,
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          );
-        }
-
-        final studyData = snapshot.data!;
-
-        return Column(
-          children: [
-            // Days of the week
-            Row(
-              children:
-                  ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day) {
-                    final isToday = _isToday(day, now);
-                    return Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          day,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight:
-                                isToday ? FontWeight.bold : FontWeight.normal,
-                            color: isToday ? Colors.blue : Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-            ),
-            const SizedBox(height: 4),
-
-            // Study time bars
-            Row(
-              children: List.generate(7, (index) {
-                final date = saturday.add(Duration(days: index));
-                final studyTime = studyData[date] ?? Duration.zero;
-                final isToday = _isToday(
-                  ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'][index],
-                  now,
-                );
-                final isFuture = date.isAfter(now);
-
-                return Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 1),
-                    child: Column(
-                      children: [
-                        // Study time bar
-                        Container(
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color:
-                                isFuture
-                                    ? Colors.grey[300]
-                                    : studyTime.inMinutes > 0
-                                    ? Colors.green[400]
-                                    : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(4),
-                            border:
-                                isToday
-                                    ? Border.all(color: Colors.blue, width: 2)
-                                    : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              _formatStudyTime(studyTime),
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w500,
-                                color:
-                                    isFuture || studyTime.inMinutes == 0
-                                        ? Colors.grey[600]
-                                        : Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<Map<DateTime, Duration>> _getWeeklyStudyData(
-    String userId,
-    DateTime saturday,
-  ) async {
-    final Map<DateTime, Duration> result = {};
-
-    for (int i = 0; i < 7; i++) {
-      final date = saturday.add(Duration(days: i));
-      final dateString =
-          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-      try {
-        final doc =
-            await FirebaseFirestore.instance
-                .collection(FirebaseConstants.dailyStatsCollection)
-                .doc(userId)
-                .collection('dates')
-                .doc(dateString)
-                .get();
-
-        if (doc.exists) {
-          final data = doc.data();
-          final studyTimeSeconds =
-              data?[FirebaseConstants.totalStudyTimeField] ?? 0;
-          result[date] = Duration(seconds: studyTimeSeconds);
-        } else {
-          result[date] = Duration.zero;
-        }
-      } catch (e) {
-        result[date] = Duration.zero;
-      }
-    }
-
-    return result;
-  }
-
-  bool _isToday(String day, DateTime now) {
-    final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final currentDay = weekdays[now.weekday - 1];
-    return day == currentDay;
-  }
-
-  String _formatStudyTime(Duration duration) {
-    if (duration.inMinutes == 0) return '0';
-    if (duration.inHours > 0) {
-      return '${duration.inHours}h';
-    }
-    return '${duration.inMinutes}m';
   }
 }
